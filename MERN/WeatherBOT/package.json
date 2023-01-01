@@ -1,0 +1,16 @@
+{
+	"name": "weatherapp",
+	"version": "1.0.0",
+	"description": "A web app which will show live weather report based on user's IP location.",
+	"main": "index.js",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"author": "Sachin Saurav",
+	"license": "ISC",
+	"dependencies": {
+		"dotenv": "^16.0.3",
+		"geoip-lite": "^1.4.6",
+		"requests": "^0.3.0"
+	}
+}

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WeatherBOT | Live Weather Report</title>
+    <link rel="icon" href="./weatherBot.png" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link href="style.css" rel="stylesheet" />
+  </head>
+  <body>
+    <div class="alert success" style="display: none">
+      <span class="closebtn">×</span>
+      <strong>Warning!</strong> Location access not available, showing an
+      approximate weather report based on IP.
+    </div>
+
+    <div class="box">
+      <div class="wave wave-one"></div>
+      <div class="wave wave-two"></div>
+      <div class="wave wave-three"></div>
+      <div class="weathercon">
+        <i class="fa-solid fa-sun" style="color: #fcba03"></i>
+      </div>
+      <div class="info">
+        <h2 class="location">
+          <i class="fa-solid fa-street-view" style="color: #ffffff"></i>
+          <span class="locationInfo">{%location%}, {%country%}</span>
+        </h2>
+        <h3 class="dateTime">
+          <span class="dateTimeInfo">{%currentDateTime%}</span>
+          <i
+            class="fa-solid fa-arrows-rotate"
+            onclick="getWeatherInfo()"
+            style="cursor: pointer"
+          ></i>
+        </h3>
+        <h1 class="temp">{%currentTemp%}&deg;C</h1>
+        <h3 class="tempMinMax">
+          <b>Min</b> {%minTemp%}&deg;C | <b>Max</b> {%maxTemp%}&deg;C
+        </h3>
+      </div>
+    </div>
+  </body>
+</html>
+
+<script src="./script.js"></script>
+<script src="./dataFetch.js"></script>
+<script src="./dataPatch.js"></script>
+<script src="https://kit.fontawesome.com/1e1ec67ebb.js"></script>

@@ -1,0 +1,12 @@
+<?php $this->load->view('front/header');?>
+
+<!-- About -->
+<div class="container pt-4 pb-4">
+<h3 class="pb-3">About Company</h3>
+  <p class="text-muted">Lorem ipsum, dolor sit amet consectetur adipisicing elit. Dignissimos, numquam similique. Assumenda, perferendis in reprehenderit magnam odio provident et? Id accusantium fugiat quasi voluptatem. At dolor deserunt recusandae ab necessitatibus?</p>
+  <p class="text-muted">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Aut facere nihil corporis earum, quam, impedit aspernatur corrupti magnam laudantium, quae assumenda repellat modi ullam atque placeat explicabo eveniet. Voluptas nostrum maxime perferendis praesentium recusandae laborum ipsam vitae minus ipsa voluptatibus, laudantium consequatur illum officiis libero cumque exercitationem quidem, nobis sit veritatis velit quasi illo cupiditate. Modi error minima tempore eaque aspernatur aperiam ipsa, sequi sapiente, dolor nemo obcaecati libero ratione totam. Sapiente praesentium voluptate voluptates.</p>
+  <p class="text-muted">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Aut facere nihil corporis earum, quam, impedit aspernatur corrupti magnam laudantium, quae assumenda repellat modi ullam atque placeat explicabo eveniet. Voluptas nostrum maxime perferendis praesentium recusandae laborum ipsam vitae minus ipsa voluptatibus, laudantium consequatur illum officiis libero cumque exercitationem quidem, nobis sit veritatis velit quasi illo cupiditate. Modi error minima tempore eaque aspernatur aperiam ipsa, sequi sapiente, dolor nemo obcaecati libero ratione totam. Sapiente praesentium voluptate voluptates.</p>
+  <p class="text-muted">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Aut facere nihil corporis earum, quam, impedit aspernatur corrupti magnam laudantium, quae assumenda repellat modi ullam atque placeat explicabo eveniet. Voluptas nostrum maxime perferendis praesentium recusandae laborum ipsam vitae minus ipsa voluptatibus, laudantium consequatur illum officiis libero cumque exercitationem quidem, nobis sit veritatis velit quasi illo cupiditate. Modi error minima tempore eaque aspernatur aperiam ipsa, sequi sapiente, dolor nemo obcaecati libero ratione totam. Sapiente praesentium voluptate voluptates.</p>
+</div>
+
+<?php $this->load->view('front/footer');?>
