@@ -1,11 +1,12 @@
-import React, { Suspense } from 'react';
+import React, { Suspense, useContext } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Preload, useGLTF } from '@react-three/drei';
-
+import { CCSizeContext } from '../../contexts';
 import CanvasLoader from '../Loader';
 
-const Computers = ({ isMobile }) => {
+const Computers = () => {
 	const computer = useGLTF('./desktop_pc/scene.gltf');
+	const canvasSize = useContext(CCSizeContext);
 
 	return (
 		<mesh>
@@ -21,15 +22,15 @@ const Computers = ({ isMobile }) => {
 			<pointLight intensity={1} />
 			<primitive
 				object={computer.scene}
-				scale={isMobile ? 0.7 : 0.75}
-				position={isMobile ? [0, -3.5, -2.2] : [0, -3.5, -1.5]}
+				scale={canvasSize.CCSize}
+				position={[0, -3.5, -1.5]}
 				rotation={[-0.01, -0.2, -0.1]}
 			/>
 		</mesh>
 	);
 };
 
-const ComputersCanvas = ({ isMobile }) => {
+const ComputersCanvas = () => {
 	return (
 		<Canvas
 			frameloop="demand"
@@ -43,7 +44,7 @@ const ComputersCanvas = ({ isMobile }) => {
 					maxPolarAngle={Math.PI / 2}
 					minPolarAngle={Math.PI / 2}
 				/>
-				<Computers isMobile={isMobile} />
+				<Computers />
 			</Suspense>
 
 			<Preload all />

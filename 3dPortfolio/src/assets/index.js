@@ -37,6 +37,11 @@ import sachin from './testimonials/sachin.png';
 import raj from './testimonials/raj.png';
 import chris from './testimonials/chris.png';
 
+import computerCanvasLite from './litePNGs/computerCanvasLite.png';
+import earthCanvasLite from './litePNGs/earthCanvasLite.png';
+import starsCanvasLite from './litePNGs/starsCanvasLite.jpg';
+import techCanvasLite from './litePNGs/techCanvasLite.png';
+
 export {
 	sauraviCafe,
 	blogera,
@@ -72,4 +77,8 @@ export {
 	typescript,
 	savisoft,
 	entrata,
+	computerCanvasLite,
+	earthCanvasLite,
+	starsCanvasLite,
+	techCanvasLite,
 };

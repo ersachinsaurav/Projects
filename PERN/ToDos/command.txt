@@ -1,2 +1,1 @@
-cd .\client\; npm start;
-nodemon --quiet .\server\index.js
+cd .\client\; npm start; nodemon --quiet .\server\index.js
