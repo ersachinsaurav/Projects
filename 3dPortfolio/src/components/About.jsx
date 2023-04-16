@@ -5,6 +5,7 @@ import { styles } from '../styles';
 import { services } from '../constants';
 import { fadeIn, textVariant } from '../utils/motion';
 import { SectionWrapper } from '../hoc';
+import { isMobile } from 'react-device-detect';
 
 const ServiceCard = ({ index, title, icon }) => {
 	return (
@@ -38,8 +39,10 @@ const About = () => {
 			</motion.div>
 			<motion.p
 				variants={fadeIn('', '', 0.1, 1)}
-				className="mt-4 text-secondary text-[17px] max-w-7xl leading-[30px] text-justify">
-				As a Full Stack Software Engineer with over 4 years of experience in Web
+				className={`mt-4 text-secondary text-[17px] max-w-7xl leading-[30px] ${
+					isMobile ? 'text-left' : 'text-justify'
+				} `}>
+				As a Full Stack Developer with over 4 years of experience in Web
 				Application Development, UI/UX Designing, and Software Engineering, I
 				possess a deep understanding of various programming languages,
 				databases, frameworks, and libraries, as well as DevOps tools.

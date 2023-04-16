@@ -1,12 +1,12 @@
 import React from 'react';
 import { Tilt } from 'react-tilt';
 import { motion } from 'framer-motion';
-
 import { styles } from '../styles';
 import { github } from '../assets';
 import { SectionWrapper } from '../hoc';
 import { projects } from '../constants';
 import { fadeIn, textVariant } from '../utils/motion';
+import { isMobile } from 'react-device-detect';
 
 const ProjectCard = ({
 	index,
@@ -68,14 +68,16 @@ const Works = () => {
 	return (
 		<>
 			<motion.div variants={textVariant()}>
-				<p className={`${styles.sectionSubText} `}>My work</p>
-				<h2 className={`${styles.sectionHeadText}`}>Projects.</h2>
+				<p className={`${styles.sectionSubText} `}>My Work</p>
+				<h2 className={`${styles.sectionHeadText}`}>Projects</h2>
 			</motion.div>
 
 			<div className="w-full flex">
 				<motion.p
 					variants={fadeIn('', '', 0.1, 1)}
-					className="mt-3 text-secondary text-[17px] max-w-7xl leading-[30px] text-justify">
+					className={`mt-3 text-secondary text-[17px] max-w-7xl leading-[30px] ${
+						isMobile ? 'text-left' : 'text-justify'
+					}`}>
 					These projects showcase my ability to use a range of technologies and
 					techniques, including web development, database management, and
 					front-end design. Whether I am styling and marking up a website with
