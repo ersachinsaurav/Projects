@@ -17,7 +17,16 @@ const Hero = () => {
 
 				<div>
 					<h1 className={`${styles.heroHeadText} text-white`}>
-						Hi, I'm <span className="text-[#915EFF]">Sachin Saurav</span>
+						Hi, I'm <span className="text-[#915EFF]">Sachin </span>
+						<span
+							className={`text-[#915EFF] ${
+								window.matchMedia('(orientation: landscape)').matches &&
+								isMobile
+									? 'hidden'
+									: ''
+							}`}>
+							Saurav
+						</span>
 					</h1>
 					<p className={`${styles.heroSubText} mt-2 text-white-100`}>
 						A passionate Full Stack Developer,
@@ -27,14 +36,20 @@ const Hero = () => {
 				</div>
 			</div>
 
-			{isMobile && (
+			{window.matchMedia('(orientation: portrait)').matches && isMobile && (
 				<div className="absolute xs:bottom-10 bottom-40 flex justify-center items-center">
-					<img src={computerCanvasLite} className="w-3/4 h-auto" />
+					<img src={computerCanvasLite} className="w-11/12 h-auto" />
 				</div>
 			)}
+
 			{!isMobile && <ComputersCanvas />}
 
-			<div className="absolute xs:bottom-10 bottom-32 w-full flex justify-center items-center">
+			<div
+				className={`absolute xs:bottom-10 bottom-32 w-full flex justify-center items-center ${
+					window.matchMedia('(orientation: landscape)').matches && isMobile
+						? 'hidden'
+						: ''
+				}`}>
 				<a href="#about">
 					<div className="w-[35px] h-[64px] rounded-3xl border-4 border-secondary flex justify-center items-start p-2">
 						<motion.div
