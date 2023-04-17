@@ -3,13 +3,16 @@ import CCSizeContext from './CCSizeContext';
 import { isMobile } from 'react-device-detect';
 
 const CCSizeState = (props) => {
-	const [CCSize, setCCSize] = useState(0.65);
+	const [CCSize, setCCSize] = useState(0.5);
+
 	const medDevice = window.matchMedia(
 		'(min-width: 1024px) and (max-width: 1366px)'
 	);
+
 	const lgDevice = window.matchMedia(
 		'(min-width: 1367px) and (max-width: 1600px)'
 	);
+
 	const xlDevice = window.matchMedia('(min-width: 1601px)');
 
 	useEffect(() => {
@@ -17,10 +20,11 @@ const CCSizeState = (props) => {
 			if (medDevice.matches) {
 				setCCSize(0.65);
 			} else if (lgDevice.matches) {
-				setCCSize(0.75);
+				setCCSize(0.7);
 			} else if (xlDevice.matches) {
-				setCCSize(0.85);
+				setCCSize(0.8);
 			}
+
 			if (isMobile) {
 				alert(
 					'To fully enjoy and experience the 3D objects and features available on this page, we recommend accessing it through a laptop or desktop device.'
