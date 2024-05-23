@@ -37,11 +37,11 @@ function App() {
     PHPStorm: [
       { label: 'PHPStorm Setup', value: 'PHPStorm Setup' },
       { label: 'PHPUnit Setup', value: 'PHPUnit Setup' },
-      { label: 'CodeSniffer', value: 'CodeSniffer' },
+      { label: 'Codesniffer Setup', value: 'Codesniffer Setup' },
       { label: 'Issues', value: 'Issues' },
     ],
     GIT: [
-      { label: 'Git Setup', value: 'Git Setup' },
+      { label: 'GIT Setup', value: 'GIT Setup' },
       { label: 'GIT Commands', value: 'GIT Commands' },
       { label: 'Issues', value: 'Issues' },
     ],
