@@ -95,6 +95,7 @@ function App() {
             content: `In ${option.label}, how can I help you with?`,
           },
         ]);
+        setShowQuitOption(false); // Do not show Quit option yet
       }
       setStage(1);
       setShowOptions(true);
@@ -115,7 +116,7 @@ function App() {
         setShowOptions(false);
         setStage(0);
         setSelectedCategory('');
-        setShowQuitOption(true);
+        setShowQuitOption(false); // Hide Quit option when asking a sub-option question
         setShowInput(false);
       }
     }
@@ -194,7 +195,7 @@ function App() {
       {
         role: 'assistant',
         content:
-          'Hello, I’m EntrataDevAssist. What kind of support are you looking for?',
+          'Hello, I’m Entrata Dev Assist aka DevTa. What kind of support are you looking for?',
       },
     ]);
     setStage(0);
@@ -269,7 +270,7 @@ function App() {
                 </button>
               </div>
             )}
-            {showQuitOption && stage !== 1 && (
+            {showQuitOption && stage === 0 && (
               <div className="options">
                 <button
                   onClick={() =>
