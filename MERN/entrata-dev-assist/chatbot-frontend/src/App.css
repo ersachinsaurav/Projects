@@ -1,0 +1,194 @@
+/* App.css */
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f4f4f4;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+}
+
+.App {
+  position: relative;
+}
+
+.chat-window {
+  width: 600px;
+  height: 750px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  background-color: #fff;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-header {
+  background-color: #c63e3e;
+  color: #fff;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+}
+
+.chat-header i {
+  margin-right: 10px;
+  font-size: 24px;
+}
+
+.chat-header h1 {
+  font-size: 24px;
+}
+
+.chat-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-message {
+  display: flex;
+  margin-bottom: 10px;
+  align-items: flex-start;
+}
+
+.chat-message.user {
+  justify-content: flex-end;
+}
+
+.chat-message.user .chat-bubble {
+  background-color: #f9f0f0;
+  color: #b14141;
+  align-self: flex-end;
+}
+
+.chat-message.assistant .chat-bubble {
+  background-color: #f6f6f7;
+  color: #000000;
+  align-self: flex-start;
+}
+
+.chat-avatar {
+  margin-right: 10px;
+  font-size: 24px;
+}
+
+.chat-message.user .chat-avatar {
+  order: 1;
+  margin-left: 10px;
+  margin-right: 0;
+}
+
+.chat-bubble {
+  background-color: #f4f4f4;
+  padding: 10px;
+  border-radius: 5px;
+  max-width: 70%;
+  white-space: pre-wrap; /* Preserve newlines and whitespace */
+}
+
+.input-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px;
+  border-top: 1px solid #ddd;
+  position: sticky;
+  bottom: 0;
+  background-color: #fff;
+}
+
+.input-container input {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  margin-right: 10px;
+}
+
+.input-container button {
+  background-color: #b14141;
+  color: #fff;
+  border: none;
+  padding: 0 15px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.input-container button i {
+  font-size: 18px;
+}
+
+.toggle-chat-btn {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #c63e3e;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+}
+/* Add this to your existing App.css */
+
+.options {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.options button {
+  background-color: #efd8d8;
+  color: #b14141;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  margin: 5px 0;
+  width: 80%;
+  text-align: center;
+}
+
+.options button:hover {
+  background-color: #b14141;
+  color: #efd8d8;
+}
+
+.input-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 10px;
+  border-color: #c63e3e;
+}
+
+.input-container input {
+  padding: 10px;
+  font-size: 16px;
+  width: 80%;
+  margin-right: 10px;
+  border-color: #c63e3e;
+}
+
+input[type='text']:focus {
+  border: 3px solid #c63e3e !important;
+}
+
+.input-container button {
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.input-container button:hover {
+  background-color: #c63e3e;
+}

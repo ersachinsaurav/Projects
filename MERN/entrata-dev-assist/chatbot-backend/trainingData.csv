@@ -1,0 +1,28 @@
+Questions/Queries,Answers
+Docker Setup,"To access instructions for setting up Docker, please copy the following link and open it in your browser: https://github.com/entrata/docker-env"
+Docker Commands,"Open Windows PowerShell and follow below commands for docker operations
+Build: docker compose up -d --build
+Start: docker compose up -d
+Stop: docker stop $(docker ps -a -q)
+Down: docker compose down"
+Failed to open stream: No such file or directory in /var/www/Entrata/www/Entrata/index.php on line 39,Try composer install for Entrata/Application
+Undefined property: Redis::$socket,"To fix this follow below order to start containers:
+1. Redis Sentinel
+2. Redis
+3. RabbitMQ
+4. Mailhog
+5. Core"
+"Unable to move forward with this ""PHPUnit Interpreter"" step as not getting option","In CLI Interpreter ->PHP executable path was missing.
+Solution : set PHP executable path as ""/usr/local/bin/php"""
+GIT Setup,"To find guidelines on configuring Git, please copy the following link and open it in your browser: https://wiki.prod.entrata.io/index.php/Dev_Setup (Note: We need to make sure enable your VPN)"
+GIT Commands,"Basic Git commands and their usage:
+
+1. `git init`: Initializes a new Git repository in the current directory.
+2. `git add`: Adds changes in the working directory to the staging area.
+3. `git commit`: Commits staged changes to the local repository.
+4. `git push`: Pushes committed changes from the local repository to a remote repository.
+5. `git pull`: Fetches changes from a remote repository and merges them into the current branch."
+Access RabbitMQ on Local,Please copy the given link and open it in your browser for RabbitMQ. Link: http://localhost:15672/#/
+Docker Integration with PhpStorm,"For guidelines on integrating Docker with PHPStorm, please copy the following link and open it in your browser: https://docs.google.com/document/d/1fKOHJA-07rTiPs_DS7s8IV36FGh9Zb9gbVHaZ1fooLo/edit?usp=sharing "
+Codesniffer Setup,To find guidelines on configuring  please copy the following link and open it in your browser: https://docs.google.com/document/d/11J9qOdRapFZp3a9qIptvF4HrjQS5oMAjMRj8fjGvSmQ/edit?usp=sharing 
+,.
