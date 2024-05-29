@@ -1,0 +1,21 @@
+{
+  "name": "web-retrieval-puppeteer",
+  "version": "1.0.0",
+  "description": "Web Retrieval - Hackathon 2024 Project",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "Sachin Saurav",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.7.2",
+    "dotenv": "^16.4.5",
+    "openai": "^4.47.1",
+    "puppeteer": "^22.9.0",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-user-preferences": "^2.4.1",
+    "readline-sync": "^1.4.10"
+  }
+}

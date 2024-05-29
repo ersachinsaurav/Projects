@@ -41,7 +41,6 @@ app.post('/ask', async (req, res) => {
     2
   )}
   \n\nAnswer the following question based on this data: ${question}
-  \n\nFollow these instructions while answering the question:
   \n\nPlease adhere to the following guidelines when responding to the question:
   1. Provide the answer directly without referencing the source.
   2. If the CSV does not contain the answer, respond with your own answer.
