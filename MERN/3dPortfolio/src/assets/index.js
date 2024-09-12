@@ -5,6 +5,8 @@ import web from './web.png';
 import pern from './pern.png';
 import mern from './mern.png';
 import lamp from './lamp.png';
+import lapp from './lapp.png';
+import frontend from './frontend.png';
 import github from './github.png';
 import menu from './menu.svg';
 import close from './close.svg';
@@ -27,7 +29,7 @@ import savisoft from './company/savisoft.png';
 import entrata from './company/entrata.png';
 
 import sauraviCafe from './projects/sauraviCafe.png';
-import blogera from './projects/blogera.png';
+import devTa from './projects/devTa.png';
 import cloudBook from './projects/cloudBook.png';
 import newsBilla from './projects/newsBilla.png';
 import nodeChat from './projects/nodeChat.png';
@@ -43,42 +45,44 @@ import starsCanvasLite from './litePNGs/starsCanvasLite.jpg';
 import techCanvasLite from './litePNGs/techCanvasLite.png';
 
 export {
-	sauraviCafe,
-	blogera,
-	cloudBook,
-	newsBilla,
-	nodeChat,
-	weatherBot,
-	sachin,
-	raj,
-	chris,
-	php,
-	nextjs,
-	expressjs,
-	postgres,
-	mysql,
-	lamp,
-	pern,
-	mern,
-	logo,
-	backend,
-	creator,
-	web,
-	github,
-	menu,
-	close,
-	css,
-	git,
-	html,
-	javascript,
-	nodejs,
-	reactjs,
-	redux,
-	typescript,
-	savisoft,
-	entrata,
-	computerCanvasLite,
-	earthCanvasLite,
-	starsCanvasLite,
-	techCanvasLite,
+  sauraviCafe,
+  devTa,
+  cloudBook,
+  newsBilla,
+  nodeChat,
+  weatherBot,
+  sachin,
+  raj,
+  chris,
+  php,
+  nextjs,
+  expressjs,
+  postgres,
+  mysql,
+  lamp,
+  lapp,
+  frontend,
+  pern,
+  mern,
+  logo,
+  backend,
+  creator,
+  web,
+  github,
+  menu,
+  close,
+  css,
+  git,
+  html,
+  javascript,
+  nodejs,
+  reactjs,
+  redux,
+  typescript,
+  savisoft,
+  entrata,
+  computerCanvasLite,
+  earthCanvasLite,
+  starsCanvasLite,
+  techCanvasLite,
 };
