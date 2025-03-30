@@ -9,6 +9,8 @@ import {
 	Tech,
 	Works,
 	StarsCanvas,
+	GitHubContributions,
+	SocialLinks,
 } from './components';
 import { CCSizeState } from './contexts';
 
@@ -25,11 +27,13 @@ const App = () => {
 					<Experience />
 					<Tech />
 					<Works />
+					<GitHubContributions />
 					<Feedbacks />
 					<div className="relative z-0">
 						<Contact />
 						<StarsCanvas />
 					</div>
+					<SocialLinks />
 				</div>
 			</BrowserRouter>
 		</CCSizeState>

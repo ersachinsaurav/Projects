@@ -8,6 +8,7 @@ import lamp from './lamp.png';
 import lapp from './lapp.png';
 import frontend from './frontend.png';
 import github from './github.png';
+import linkedin from './linkedin.png';
 import menu from './menu.svg';
 import close from './close.svg';
 
@@ -28,12 +29,12 @@ import git from './tech/git.png';
 import savisoft from './company/savisoft.png';
 import entrata from './company/entrata.png';
 
-import sauraviCafe from './projects/sauraviCafe.png';
 import devTa from './projects/devTa.png';
 import cloudBook from './projects/cloudBook.png';
 import newsBilla from './projects/newsBilla.png';
 import nodeChat from './projects/nodeChat.png';
 import weatherBot from './projects/weatherBot.png';
+import crBot from './projects/cr-bot.png';
 
 import sachin from './testimonials/sachin.png';
 import raj from './testimonials/raj.png';
@@ -44,8 +45,15 @@ import earthCanvasLite from './litePNGs/earthCanvasLite.png';
 import starsCanvasLite from './litePNGs/starsCanvasLite.jpg';
 import techCanvasLite from './litePNGs/techCanvasLite.png';
 
+// New service icons
+import technicalLeadership from './technical-leadership.png';
+import systemArchitecture from './system-architecture.png';
+import cloudArchitecture from './cloud-architecture.png';
+import apiDevelopment from './api-development.png';
+import databaseOptimization from './database-optimization.png';
+import performanceTuning from './performance-tuning.png';
+
 export {
-  sauraviCafe,
   devTa,
   cloudBook,
   newsBilla,
@@ -69,6 +77,7 @@ export {
   creator,
   web,
   github,
+  linkedin,
   menu,
   close,
   css,
@@ -85,4 +94,11 @@ export {
   earthCanvasLite,
   starsCanvasLite,
   techCanvasLite,
+  technicalLeadership,
+  systemArchitecture,
+  cloudArchitecture,
+  apiDevelopment,
+  databaseOptimization,
+  performanceTuning,
+  crBot,
 };

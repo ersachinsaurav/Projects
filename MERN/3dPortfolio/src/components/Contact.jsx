@@ -40,7 +40,7 @@ const Contact = () => {
 					from_name: form.name,
 					to_name: 'Sachin Saurav',
 					from_email: form.email,
-					to_email: 'ersachinsaurav@gmail.com',
+					to_email: 'contact@sachinsaurav.dev',
 					message: form.message,
 				},
 				import.meta.env.VITE_APP_EMAILJS_PUBLIC_KEY
@@ -99,10 +99,10 @@ const Contact = () => {
 							name="email"
 							value={form.email}
 							onChange={handleChange}
-							placeholder="What's your web address?"
+							placeholder="What's your email address?"
 							className="bg-tertiary py-4 px-6 placeholder:text-secondary text-white rounded-lg outline-none border-none font-medium"
 							required
-							title="What's your web address?"
+							title="What's your email address?"
 						/>
 					</label>
 					<label className="flex flex-col">

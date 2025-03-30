@@ -17,19 +17,10 @@ const Hero = () => {
 
 				<div>
 					<h1 className={`${styles.heroHeadText} text-white`}>
-						Hi, I'm <span className="text-[#915EFF]">Sachin </span>
-						<span
-							className={`text-[#915EFF] ${
-								window.matchMedia('(orientation: landscape)').matches &&
-								isMobile
-									? 'hidden'
-									: ''
-							}`}>
-							Saurav
-						</span>
+						Hi, I'm <span className="text-[#915EFF]">Sachin&nbsp;Saurav</span>
 					</h1>
 					<p className={`${styles.heroSubText} mt-2 text-white-100`}>
-						A passionate Full Stack Developer,
+						A passionate Full Stack Engineer,
 						<br className="sm:block hidden" />
 						with a love for crafting seamless web experiences.
 					</p>

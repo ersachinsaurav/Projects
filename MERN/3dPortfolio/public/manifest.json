@@ -1,6 +1,6 @@
 {
 	"short_name": "Sachin Saurav",
-	"name": "Sachin Saurav - Full Stack Developer | Skilled in PHP, NodeJS, NestJs, ReactJS, JavaScript & DevOps Tools | Crafting Seamless Web Experiences",
+	"name": "Sachin Saurav - Full Stack Engineer | Skilled in PHP, NodeJS, NestJs, ReactJS, JavaScript & DevOps Tools | Crafting Seamless Web Experiences",
 	"icons": [
 		{
 			"src": "logo.png",
@@ -8,7 +8,7 @@
 			"type": "image/png"
 		}
 	],
-	"start_url": "https://www.sachinsaurav.dev/",
+	"start_url": "/",
 	"display": "standalone",
 	"theme_color": "#000000",
 	"background_color": "#000000"

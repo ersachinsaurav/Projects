@@ -18,6 +18,7 @@ const ExperienceCard = ({ experience }) => {
 			}}
 			date={experience.date}
 			iconStyle={{ background: experience.iconBg }}
+			visible={true}
 			icon={
 				<div className="flex justify-center items-center w-full h-full">
 					<img

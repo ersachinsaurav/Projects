@@ -78,21 +78,7 @@ const Works = () => {
 					className={`mt-3 text-secondary text-[17px] max-w-7xl leading-[30px] ${
 						isMobile ? 'text-left' : 'text-justify'
 					}`}>
-					These projects showcase my ability to use a range of technologies and
-					techniques, including web development, database management, and
-					front-end design. Whether I am styling and marking up a website with
-					HTML, CSS, and Smarty, making the UI interactive with JavaScript,
-					jQuery, and AJAX, working with server-side languages like PHP or
-					interacting with databases like MySQL, PostgreSQL, and MongoDB, these
-					projects demonstrate my versatility and competence as a web developer.
-					I have also utilized Bootstrap and Materialize in some of these
-					projects for front-end styling. I have also worked with different
-					frameworks of PHP and JavaScript, like CodeIgniter, ReactJS, and
-					NodeJS. These projects demonstrate my ability to work with a variety
-					of tools and technologies to create dynamic and functional web
-					applications. Whether working independently or as part of a team, I
-					have always been dedicated to creating high-quality, functional, and
-					visually appealing projects.
+					My projects showcase practical solutions to real-world challenges. I've built AI-powered development tools that cut review time by 50%, secure cloud applications with end-to-end encryption, and real-time communication platforms that connect users instantly. Each project demonstrates my expertise in modern frameworks like React and Node.js, along with my commitment to clean code, robust architecture, and exceptional user experience. From concept to deployment, I focus on creating applications that are not only technically sound but also deliver meaningful value to users and businesses alike.
 				</motion.p>
 			</div>
 

@@ -14,13 +14,17 @@ const ServiceCard = ({ index, title, icon }) => {
 				variants={fadeIn('right', 'spring', 0.5 * index, 0.75)}
 				className="w-full green-pink-gradient p-[1px] rounded-[20px] shadow-card">
 				<div
-					option={{
+					options={{
 						max: 45,
 						scale: 1,
 						speed: 450,
 					}}
 					className="bg-tertiary rounded-[20px] py-5 px-12 min-h-[280px] flex justify-evenly items-center flex-col">
-					<img src={icon} alt={title} className="w-16 h-16 object-contain" />
+					<img
+						src={icon}
+						alt={title}
+						className="w-20 h-20 object-contain mb-4"
+					/>
 					<h3 className="text-white text-[20px] font-bold text-center">
 						{title}
 					</h3>
@@ -42,17 +46,11 @@ const About = () => {
 				className={`mt-4 text-secondary text-[17px] max-w-7xl leading-[30px] ${
 					isMobile ? 'text-left' : 'text-justify'
 				} `}>
-				As a Full Stack Developer with over 4 years of experience in Web
-				Application Development, UI/UX Designing, and Software Engineering, I
-				possess a deep understanding of various programming languages,
-				databases, frameworks, and libraries, as well as DevOps tools.
+				I help businesses translate their ideas into code by building scalable, user-friendly web applications and seamless software integrations. As a Senior Software Engineer with 6+ years of experience, I lead teams in delivering end-to-end solutions—from initial requirements analysis to final deployment and beyond.
 				<br className="sm:block hidden" />
-				Crafting beautiful and seamless web experiences is my passion, and I am
-				committed to constantly learning and staying updated with the latest
-				trends and technologies to bring the best value to my clients. With my
-				dedication, teamwork skills, and strong communication, I have a proven
-				track record of delivering high-quality projects on time and within
-				budget.
+				Specializing in Agile methodologies and cloud-native architecture, I work closely with my team to ensure efficient collaboration, rapid iteration, and high-quality delivery. I'm passionate about building intuitive user interfaces and robust back-end systems, leveraging a diverse set of programming languages, frameworks, and tools to create innovative solutions that meet business needs.
+				<br className="sm:block hidden" />
+				In my current role, I take ownership of projects from scratch, guiding them through every phase of the software development lifecycle. I mentor engineers, promote cross-functional collaboration, and ensure clear communication to align technical solutions with business objectives. Driven by a passion for continuous learning, I stay on top of industry trends and emerging technologies, always striving to deliver lasting value to both my team and the business. My philosophy is simple: <span className="text-[#915eff]">elegant code solves complex problems</span> — a mindset I've carried since writing my first "Hello World" program at age 14.
 			</motion.p>
 
 			<div className="mt-20 flex flex-wrap gap-10">

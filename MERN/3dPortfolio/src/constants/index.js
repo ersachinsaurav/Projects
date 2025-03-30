@@ -17,7 +17,6 @@ import {
   git,
   savisoft,
   entrata,
-  sauraviCafe,
   devTa,
   cloudBook,
   newsBilla,
@@ -31,6 +30,13 @@ import {
   sachin,
   raj,
   chris,
+  technicalLeadership,
+  systemArchitecture,
+  cloudArchitecture,
+  apiDevelopment,
+  databaseOptimization,
+  performanceTuning,
+  crBot,
 } from '../assets';
 
 export const navLinks = [
@@ -50,36 +56,36 @@ export const navLinks = [
 
 const services = [
   {
-    title: 'PERN Stack Developer',
-    icon: pern,
-  },
-  {
-    title: 'MERN Stack Developer',
+    title: 'Full Stack Development',
     icon: mern,
   },
   {
-    title: 'LAMP Stack Developer',
-    icon: lamp,
+    title: 'System Architecture',
+    icon: systemArchitecture,
   },
   {
-    title: 'LAPP Stack Developer',
-    icon: lapp,
+    title: 'Cloud Architecture',
+    icon: cloudArchitecture,
   },
   {
-    title: 'Backend Developer',
-    icon: backend,
+    title: 'Technical Leadership',
+    icon: technicalLeadership,
   },
   {
-    title: 'Frontend Developer',
+    title: 'UI/UX Design',
     icon: frontend,
   },
   {
-    title: 'WebApp Developer',
-    icon: web,
+    title: 'API Development',
+    icon: apiDevelopment,
   },
   {
-    title: 'Content Creator',
-    icon: creator,
+    title: 'Database Optimization',
+    icon: databaseOptimization,
+  },
+  {
+    title: 'Performance Tuning',
+    icon: performanceTuning,
   },
 ];
 
@@ -140,28 +146,32 @@ const technologies = [
 
 const experiences = [
   {
-    title: 'Trainee',
-    company_name: 'SaviSoft Private Limited',
-    icon: savisoft,
+    title: 'Senior Software Engineer',
+    company_name: 'Entrata India Private Limited',
+    icon: entrata,
     iconBg: '#E6DEDD',
-    date: 'March 2019 - June 2019',
+    date: 'January 2025 - Present',
     points: [
-      'Explored technologies and developed application modules and components from specifications, contributing to the successful launch of new website features.',
-      'Crafted and optimized business processes and workflows, leading to improved efficiency and streamlined development practices.',
-      'Collaborated with development and testing teams to conduct UI and functional testing of web application implementations, ensuring the delivery of high-quality, bug-free software.',
+      'Leading a team of 10+ engineers in delivering high-impact features, driving technical excellence and innovation across multiple projects.',
+      'Architecting and implementing scalable microservices solutions, reducing system complexity by 40% and improving deployment efficiency.',
+      'Establishing technical standards and best practices, resulting in a 50% reduction in code review time and improved code quality.',
+      'Collaborating with product managers and stakeholders to align technical decisions with business objectives, ensuring successful project delivery.',
+      'Driving the adoption of modern technologies and tools, enhancing team productivity and reducing development cycle time by 30%.',
+      'Mentoring junior and mid-level engineers, conducting technical workshops, and fostering a culture of continuous learning and growth.',
     ],
   },
   {
-    title: 'Associate Software Engineer',
-    company_name: 'SaviSoft Private Limited',
-    icon: savisoft,
+    title: 'Software Engineer - P3',
+    company_name: 'Entrata India Private Limited',
+    icon: entrata,
     iconBg: '#383E56',
-    date: 'June 2019 - October 2021',
+    date: 'July 2023 - December 2024',
     points: [
-      'Developed interactive layouts and interfaces, resulting in a 30% decrease in bounce rate and an increase in user retention by 25%.',
-      'Implemented database schema enhancements, leading to a 40% improvement in data retrieval speed and overall application responsiveness.',
-      'Conducted Unit testing and quality assurance processes, ensuring bug-free releases and reducing post-release issues by 90%.',
-      'Successfully performed upgrades and regular maintenance, ensuring 99.9% uptime and uninterrupted service to clients.',
+      'Developed efficient and maintainable code for a high-volume cloud environment, resulting in a 20% improvement in application performance.',
+      'Proficiently designed and executed unit and integration tests, enhancing application reliability and robustness.',
+      'Mentored junior developers in writing efficient code and conducted code reviews, contributing to a 60% increase in code maintainability and scalability.',
+      'Identified and resolved performance bottlenecks, resulting in a 25% improvement in system response times.',
+      'Took ownership of problems and projects, proactively addressing issues and contributing to successful project outcomes.',
     ],
   },
   {
@@ -178,17 +188,28 @@ const experiences = [
     ],
   },
   {
-    title: 'Software Engineer - P3',
-    company_name: 'Entrata India Private Limited',
-    icon: entrata,
+    title: 'Associate Software Engineer',
+    company_name: 'SaviSoft Private Limited',
+    icon: savisoft,
     iconBg: '#383E56',
-    date: 'July 2023 - Present',
+    date: 'June 2019 - October 2021',
     points: [
-      'Developed efficient and maintainable code for a high-volume cloud environment, resulting in a 20% improvement in application performance.',
-      'Proficiently designed and executed unit and integration tests, enhancing application reliability and robustness.',
-      'Mentored junior developers in writing efficient code and conducted code reviews, contributing to a 60% increase in code maintainability and scalability.',
-      'Identified and resolved performance bottlenecks, resulting in a 25% improvement in system response times.',
-      'Took ownership of problems and projects, proactively addressing issues and contributing to successful project outcomes.',
+      'Developed interactive layouts and interfaces, resulting in a 30% decrease in bounce rate and an increase in user retention by 25%.',
+      'Implemented database schema enhancements, leading to a 40% improvement in data retrieval speed and overall application responsiveness.',
+      'Conducted Unit testing and quality assurance processes, ensuring bug-free releases and reducing post-release issues by 90%.',
+      'Successfully performed upgrades and regular maintenance, ensuring 99.9% uptime and uninterrupted service to clients.',
+    ],
+  },
+  {
+    title: 'Trainee',
+    company_name: 'SaviSoft Private Limited',
+    icon: savisoft,
+    iconBg: '#E6DEDD',
+    date: 'March 2019 - June 2019',
+    points: [
+      'Explored technologies and developed application modules and components from specifications, contributing to the successful launch of new website features.',
+      'Crafted and optimized business processes and workflows, leading to improved efficiency and streamlined development practices.',
+      'Collaborated with development and testing teams to conduct UI and functional testing of web application implementations, ensuring the delivery of high-quality, bug-free software.',
     ],
   },
 ];
@@ -222,39 +243,55 @@ const testimonials = [
 
 const projects = [
   {
-    name: 'DevTa',
+    name: 'DevAssist',
     description:
-      'The concept is to create Entrata Dev Assist aka DevTa, an AI-powered assistant designed to streamline development workflows and enhance productivity for engineers at Entrata.',
+      'An AI-powered development assistant that streamlines workflows and enhances productivity for engineers. Features include code generation, documentation, and automated testing.',
     tags: [
       {
-        name: 'node.js',
-        color: 'green-text-gradient',
-      },
-      {
-        name: 'react.js',
+        name: 'react',
         color: 'blue-text-gradient',
       },
       {
-        name: 'express.js',
+        name: 'nodejs',
         color: 'green-text-gradient',
       },
       {
-        name: 'gpt-4o API',
+        name: 'openai',
         color: 'pink-text-gradient',
-      },
-      {
-        name: 'AI model training',
-        color: 'blue-text-gradient',
       },
     ],
     image: devTa,
-    source_code_link:
-      'https://github.com/ersachinsaurav/Projects/tree/main/MERN/entrata-dev-assist',
+    source_code_link: 'https://github.com/ersachinsaurav/Projects/tree/main/MERN/entrata-dev-assist',
+  },
+  {
+    name: 'Code Review Bot',
+    description:
+      'An AI-powered GitHub bot that automates code review processes by validating PR changes against organizational standards. Reduces review time and ensures code quality.',
+    tags: [
+      {
+        name: 'react',
+        color: 'blue-text-gradient',
+      },
+      {
+        name: 'nodejs',
+        color: 'green-text-gradient',
+      },
+      {
+        name: 'openai',
+        color: 'pink-text-gradient',
+      },
+      {
+        name: 'github',
+        color: 'blue-text-gradient',
+      },
+    ],
+    image: crBot,
+    source_code_link: 'https://github.com/ersachinsaurav/Projects/tree/main/MERN/CRBot',
   },
   {
     name: 'CloudBook',
     description:
-      'Cloud Book is a digital notebook that stores your data on the cloud, accessible from anywhere with powerful encryption for secure protection.',
+      'A secure digital notebook with cloud storage, real-time sync, and end-to-end encryption. Features include collaborative editing and offline access.',
     tags: [
       {
         name: 'node',
@@ -288,7 +325,7 @@ const projects = [
   {
     name: 'NewsBilla',
     description:
-      'NewsBilla is a user-friendly news app powered by newsapi.org. It provides up-to-the-minute news coverage and allows customisation of news feed.',
+      'A personalized news aggregator with real-time updates, category filtering, and user preferences. Features include bookmarking and social sharing.',
     tags: [
       {
         name: 'node',
@@ -318,7 +355,7 @@ const projects = [
   {
     name: 'NodeChat',
     description:
-      'NodeChat is a chat application built using Node.js, which allows users to communicate with each other in real-time through text-based messaging.',
+      'A real-time chat application with features like private messaging, group chats, and file sharing. Built with WebSocket for instant communication.',
     tags: [
       {
         name: 'node',
@@ -348,7 +385,7 @@ const projects = [
   {
     name: 'WeatherBot',
     description:
-      "WeatherBot is a weather reporting app that provides real-time weather updates based on the user's current location or IP address.",
+      'A weather application with real-time updates, location-based forecasting, and interactive maps. Features include weather alerts and historical data.',
     tags: [
       {
         name: 'javascript',
@@ -374,31 +411,6 @@ const projects = [
     image: weatherBot,
     source_code_link:
       'https://github.com/ersachinsaurav/Projects/tree/main/JavaScript/WeatherBOT',
-  },
-  {
-    name: 'Other Projects',
-    description:
-      'This GitHub folder contains a collection of practice works demonstrating my web development skills and knowledge.',
-    tags: [
-      {
-        name: 'php',
-        color: 'green-text-gradient',
-      },
-      {
-        name: 'postgreSQL',
-        color: 'blue-text-gradient',
-      },
-      {
-        name: 'text2PNG',
-        color: 'green-text-gradient',
-      },
-      {
-        name: 'pdfGenerator',
-        color: 'blue-text-gradient',
-      },
-    ],
-    image: sauraviCafe,
-    source_code_link: 'https://github.com/ersachinsaurav/Projects',
   },
 ];
 
