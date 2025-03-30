@@ -4,6 +4,7 @@ import { styles } from '../styles';
 import { SectionWrapper } from '../hoc';
 import { fadeIn, textVariant, staggerContainer } from '../utils/motion';
 import { github } from '../assets';
+import { getKey } from '../config/keys';
 
 const GitHubContributions = () => {
   const [loading, setLoading] = useState(true);
@@ -24,14 +25,11 @@ const GitHubContributions = () => {
   useEffect(() => {
     const fetchGitHubStats = async () => {
       try {
-        const isDevelopment = import.meta.env.DEV;
-        const token = import.meta.env.VITE_GITHUB_TOKEN;
+        const token = getKey('GITHUB_TOKEN');
 
         if (!token) {
           throw new Error(
-            isDevelopment
-              ? 'GitHub token not configured. Please add VITE_GITHUB_TOKEN to your .env file'
-              : 'GitHub stats are temporarily unavailable'
+            'GitHub token not configured.'
           );
         }
 
@@ -106,10 +104,8 @@ const GitHubContributions = () => {
         const response = await fetch('https://api.github.com/graphql', {
           method: 'POST',
           headers: {
+            Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
-            'Accept': 'application/vnd.github.v3+json',
-            'Authorization': `Bearer ${token}`,
-            'User-Agent': 'Portfolio-App'
           },
           body: JSON.stringify({ query })
         });
@@ -117,15 +113,11 @@ const GitHubContributions = () => {
         if (!response.ok) {
           if (response.status === 401) {
             throw new Error(
-              isDevelopment
-                ? 'GitHub token is invalid or expired. Please check your token.'
-                : 'GitHub stats are temporarily unavailable'
+              'GitHub token is invalid or expired.'
             );
           }
           throw new Error(
-            isDevelopment
-              ? `Failed to fetch GitHub data: ${response.statusText}`
-              : 'GitHub stats are temporarily unavailable'
+            'GitHub stats are temporarily unavailable.'
           );
         }
 
@@ -133,9 +125,7 @@ const GitHubContributions = () => {
 
         if (data.errors) {
           throw new Error(
-            isDevelopment
-              ? `GitHub API Error: ${data.errors[0].message}`
-              : 'GitHub stats are temporarily unavailable'
+            'GitHub API Error: ' + data.errors[0].message
           );
         }
 
@@ -280,7 +270,6 @@ const GitHubContributions = () => {
         });
         setLoading(false);
       } catch (error) {
-        console.error('Error fetching GitHub stats:', error);
         setError(error.message);
         setLoading(false);
       }

@@ -7,6 +7,7 @@ import { SectionWrapper } from '../hoc';
 import { slideIn } from '../utils/motion';
 import { isMobile } from 'react-device-detect';
 import { earthCanvasLite } from '../assets';
+import { getKey } from '../config/keys';
 
 const Contact = () => {
 	const formRef = useRef();
@@ -34,8 +35,8 @@ const Contact = () => {
 
 		emailjs
 			.send(
-				import.meta.env.VITE_APP_EMAILJS_SERVICE_ID,
-				import.meta.env.VITE_APP_EMAILJS_TEMPLATE_ID,
+				getKey('EMAILJS_SERVICE_ID'),
+				getKey('EMAILJS_TEMPLATE_ID'),
 				{
 					from_name: form.name,
 					to_name: 'Sachin Saurav',
@@ -43,7 +44,7 @@ const Contact = () => {
 					to_email: 'contact@sachinsaurav.dev',
 					message: form.message,
 				},
-				import.meta.env.VITE_APP_EMAILJS_PUBLIC_KEY
+				getKey('EMAILJS_PUBLIC_KEY')
 			)
 			.then(
 				() => {
@@ -58,8 +59,7 @@ const Contact = () => {
 				},
 				(error) => {
 					setLoading(false);
-					console.error(error);
-
+					console.error('Error:', error);
 					alert('Ahh, something went wrong. Please try again.');
 				}
 			);
@@ -130,7 +130,7 @@ const Contact = () => {
 			<motion.div
 				variants={slideIn('right', 'tween', 0.2, 1)}
 				className="xl:flex-1 h-auto">
-				{isMobile && <img src={earthCanvasLite} className="w-full h-auto" />}
+				{isMobile && <img src={earthCanvasLite} alt="3D Earth" className="w-full h-auto" />}
 				{!isMobile && <EarthCanvas />}
 			</motion.div>
 		</div>
