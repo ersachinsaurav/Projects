@@ -404,7 +404,7 @@ function App() {
             </button>
 
             <a
-              href="https://github.com/ersachinsaurav/Projects/tree/main/linkedin-post-generator"
+              href="https://github.com/ersachinsaurav/Projects/tree/main/linkedin_post_generator"
               target="_blank"
               rel="noopener noreferrer"
               className={`p-2 rounded-full transition-colors ${isDark ? 'hover:bg-dark-border' : 'hover:bg-gray-100'}`}

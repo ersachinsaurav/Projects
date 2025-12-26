@@ -69,9 +69,9 @@ chmod +x launch.sh
 ```
 
 This starts:
-- **Backend Documentation**: http://localhost:8000/docs (Swagger docs)
-- **Backend**: http://localhost:8000 (FastAPI)
+- **Backend**: http://localhost:8000 (Python + FastAPI)
 - **Frontend**: http://localhost:5173 (React + Vite)
+- **API Documentation**: http://localhost:8000/docs (Swagger docs)
 
 ### Manual Setup
 
