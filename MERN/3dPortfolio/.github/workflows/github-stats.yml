@@ -1,0 +1,186 @@
+name: Update GitHub Stats
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'  # Runs every 6 hours
+  workflow_dispatch:  # Allows manual trigger
+
+jobs:
+  update-stats:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Create Stats Directory
+        run: mkdir -p public/data
+
+      - name: Fetch GitHub Stats
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const query = `
+              query {
+                user(login: "ersachinsaurav") {
+                  contributionsCollection {
+                    totalCommitContributions
+                    totalPullRequestContributions
+                    totalIssueContributions
+                    contributionCalendar {
+                      totalContributions
+                      weeks {
+                        contributionDays {
+                          contributionCount
+                          date
+                        }
+                      }
+                    }
+                    restrictedContributionsCount
+                    totalRepositoryContributions
+                    totalPullRequestReviewContributions
+                    totalRepositoriesWithContributedCommits
+                    totalRepositoriesWithContributedPullRequests
+                  }
+                  repositories(first: 100, privacy: PUBLIC) {
+                    nodes {
+                      name
+                      stargazerCount
+                      languages(first: 10) {
+                        nodes {
+                          name
+                          color
+                        }
+                      }
+                      defaultBranchRef {
+                        target {
+                          ... on Commit {
+                            history(first: 1) {
+                              totalCount
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            `;
+
+            try {
+              const result = await github.graphql(query);
+              const stats = result.user;
+
+              // Calculate streaks
+              const allDays = [];
+              stats.contributionsCollection.contributionCalendar.weeks.forEach(week => {
+                week.contributionDays.forEach(day => {
+                  allDays.push(day);
+                });
+              });
+
+              // Sort days from oldest to newest
+              allDays.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+              // Calculate streaks
+              const today = new Date();
+              today.setHours(0, 0, 0, 0);
+
+              const thirtyDaysAgo = new Date(today);
+              thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+              const oneYearAgo = new Date(today);
+              oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+
+              let currentStreak = 0;
+              let tempCurrentStreak = 0;
+              let longestStreak = 0;
+              let tempLongestStreak = 0;
+
+              for (let i = 0; i < allDays.length; i++) {
+                const day = allDays[i];
+                const date = new Date(day.date);
+                date.setHours(0, 0, 0, 0);
+
+                if (date < oneYearAgo) continue;
+
+                if (day.contributionCount > 0) {
+                  tempLongestStreak++;
+                  if (date >= thirtyDaysAgo) {
+                    tempCurrentStreak++;
+                    if (tempCurrentStreak > currentStreak) {
+                      currentStreak = tempCurrentStreak;
+                    }
+                  }
+                  if (tempLongestStreak > longestStreak) {
+                    longestStreak = tempLongestStreak;
+                  }
+                } else {
+                  tempLongestStreak = 0;
+                  if (date >= thirtyDaysAgo) {
+                    tempCurrentStreak = 0;
+                  }
+                }
+              }
+
+              // Process languages
+              const languageMap = new Map();
+              stats.repositories.nodes.forEach(repo => {
+                repo.languages.nodes.forEach(lang => {
+                  if (!languageMap.has(lang.name)) {
+                    languageMap.set(lang.name, { count: 0, color: lang.color });
+                  }
+                  languageMap.get(lang.name).count++;
+                });
+              });
+
+              const languages = Array.from(languageMap.entries())
+                .map(([name, data]) => ({
+                  name,
+                  count: data.count,
+                  color: data.color
+                }))
+                .sort((a, b) => b.count - a.count)
+                .slice(0, 5);
+
+              // Calculate total stars
+              const totalStars = stats.repositories.nodes.reduce(
+                (sum, repo) => sum + repo.stargazerCount,
+                0
+              );
+
+              const processedStats = {
+                totalContributions: stats.contributionsCollection.contributionCalendar.totalContributions,
+                commits: stats.contributionsCollection.totalCommitContributions,
+                pullRequests: stats.contributionsCollection.totalPullRequestContributions,
+                codeReviews: stats.contributionsCollection.totalPullRequestReviewContributions,
+                repositories: stats.contributionsCollection.totalRepositoriesWithContributedCommits,
+                currentStreak,
+                longestStreak,
+                languages,
+                totalStars,
+                lastUpdated: new Date().toISOString()
+              };
+
+              const fs = require('fs');
+              fs.writeFileSync(
+                'public/data/github-stats.json',
+                JSON.stringify(processedStats, null, 2)
+              );
+
+            } catch (error) {
+              core.setFailed(`Action failed with error: ${error}`);
+            }
+
+      - name: Commit and Push
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add public/data/github-stats.json
+          git commit -m "Update GitHub stats" || exit 0
+          git push

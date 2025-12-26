@@ -1,0 +1,163 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 244 242 238;
+    --foreground: 0 0 0;
+    --card: 255 255 255;
+    --card-foreground: 0 0 0;
+    --popover: 255 255 255;
+    --popover-foreground: 0 0 0;
+    --primary: 10 102 194;
+    --primary-foreground: 255 255 255;
+    --secondary: 240 240 240;
+    --secondary-foreground: 0 0 0;
+    --muted: 240 240 240;
+    --muted-foreground: 102 102 102;
+    --accent: 99 102 241;
+    --accent-foreground: 255 255 255;
+    --destructive: 239 68 68;
+    --destructive-foreground: 255 255 255;
+    --border: 224 224 224;
+    --input: 224 224 224;
+    --ring: 10 102 194;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 13 17 23;
+    --foreground: 201 209 217;
+    --card: 22 27 34;
+    --card-foreground: 201 209 217;
+    --popover: 22 27 34;
+    --popover-foreground: 201 209 217;
+    --primary: 88 166 255;
+    --primary-foreground: 0 0 0;
+    --secondary: 48 54 61;
+    --secondary-foreground: 201 209 217;
+    --muted: 48 54 61;
+    --muted-foreground: 139 148 158;
+    --accent: 129 140 248;
+    --accent-foreground: 0 0 0;
+    --destructive: 248 113 113;
+    --destructive-foreground: 0 0 0;
+    --border: 48 54 61;
+    --input: 48 54 61;
+    --ring: 88 166 255;
+  }
+}
+
+@layer base {
+  * {
+    border-color: rgb(224 224 224);
+  }
+
+  body {
+    @apply bg-linkedin-background text-linkedin-text;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer components {
+  /* LinkedIn-style card */
+  .linkedin-card {
+    @apply bg-white rounded-lg border border-linkedin-border shadow-sm;
+  }
+
+  /* LinkedIn post preview styling */
+  .linkedin-post-preview {
+    @apply font-sans text-sm leading-relaxed whitespace-pre-wrap;
+  }
+
+  /* Loading shimmer effect */
+  .shimmer {
+    @apply relative overflow-hidden;
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.5) 50%,
+      rgba(255, 255, 255, 0) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 2s linear infinite;
+  }
+
+  /* Gradient text */
+  .gradient-text {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-linkedin-blue to-accent-primary;
+  }
+
+  /* Button base styles */
+  .btn-primary {
+    @apply bg-linkedin-blue text-white hover:bg-linkedin-blue-dark
+           px-4 py-2 rounded-full font-semibold transition-colors
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply bg-white text-linkedin-blue border border-linkedin-blue
+           hover:bg-linkedin-blue/5 px-4 py-2 rounded-full font-semibold
+           transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  /* Form elements */
+  .input-field {
+    @apply w-full px-3 py-2 border border-linkedin-border rounded-lg
+           focus:outline-none focus:ring-2 focus:ring-linkedin-blue focus:border-transparent
+           placeholder:text-linkedin-text-secondary;
+  }
+
+  .textarea-field {
+    @apply w-full px-3 py-2 border border-linkedin-border rounded-lg
+           focus:outline-none focus:ring-2 focus:ring-linkedin-blue focus:border-transparent
+           placeholder:text-linkedin-text-secondary resize-none;
+  }
+
+  /* Skeleton loading */
+  .skeleton {
+    @apply animate-pulse bg-gray-200 rounded;
+  }
+
+  /* Image grid */
+  .image-grid {
+    @apply grid gap-4;
+  }
+
+  .image-grid-1 {
+    @apply grid-cols-1;
+  }
+
+  .image-grid-2 {
+    @apply grid-cols-2;
+  }
+
+  .image-grid-3 {
+    @apply grid-cols-2 md:grid-cols-3;
+  }
+
+  .image-grid-4 {
+    @apply grid-cols-2;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-100 rounded;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 rounded hover:bg-gray-400;
+}
+
+/* Selection color */
+::selection {
+  @apply bg-linkedin-blue/20;
+}
+
