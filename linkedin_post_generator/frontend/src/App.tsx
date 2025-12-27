@@ -363,6 +363,65 @@ function App() {
     }
   }, [textData]);
 
+  // Format draft manually (no API call - just load into editor)
+  // If draftPost has content, use it; otherwise create empty editor
+  const handleFormatDraft = useCallback(() => {
+    setError(null);
+    setImageData(null); // Clear previous images
+
+    let contentToFormat = draftPost.trim();
+    let hashtags: string[] = [];
+    let postText = '';
+
+    if (contentToFormat) {
+      // Extract hashtags from draft (lines starting with # or words starting with #)
+      const lines = contentToFormat.split('\n');
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        // Check if line is all hashtags
+        if (trimmed.startsWith('#') && trimmed.split(/\s+/).every(word => word.startsWith('#'))) {
+          // Extract hashtags from this line
+          const tags = trimmed.match(/#\w+/g) || [];
+          hashtags.push(...tags.map(tag => tag.substring(1))); // Remove # symbol
+        } else if (trimmed) {
+          // Regular content line
+          postText += (postText ? '\n' : '') + line;
+        }
+      }
+
+      // If no hashtags found, try to extract from the end of the text
+      if (hashtags.length === 0) {
+        const hashtagMatch = postText.match(/#\w+/g);
+        if (hashtagMatch) {
+          hashtags.push(...hashtagMatch.map(tag => tag.substring(1)));
+          // Remove hashtags from post text
+          postText = postText.replace(/#\w+/g, '').trim();
+        }
+      }
+    }
+
+    // Create a minimal TextGenerationResponse for manual editing
+    const manualTextData: TextGenerationResponse = {
+      post_text: postText || contentToFormat || '', // Empty if no draft, so user can paste directly
+      short_post: (postText || contentToFormat || '').substring(0, 150).trim(),
+      hashtags: hashtags.length > 0 ? hashtags : [],
+      image_recommendation: null,
+      image_strategy: null,
+      image_prompts: [],
+      image_fingerprint: null,
+      session_id: sessionId,
+      model_used: 'Manual Format',
+      image_model_used: imageModel.model,
+      tokens_used: 0,
+      generation_time_ms: 0,
+    };
+
+    setTextData(manualTextData);
+    // Don't auto-generate images for manual formatting
+    setShouldAutoGenerateImages(false);
+  }, [draftPost, sessionId, imageModel]);
+
   return (
     <div className={`min-h-screen transition-colors ${isDark ? 'bg-dark-bg' : 'bg-linkedin-background'}`}>
       {/* Header */}
@@ -466,6 +525,7 @@ function App() {
               generateImage={generateImage}
               setGenerateImage={setGenerateImage}
               onGenerate={handleGenerateText}
+              onFormatDraft={handleFormatDraft}
               isGenerating={textMutation.isPending}
             />
           </div>

@@ -16,6 +16,7 @@ import {
   FileText,
   Settings2,
   Image as ImageIcon,
+  Edit3,
 } from 'lucide-react';
 import type {
   PostLength,
@@ -48,6 +49,7 @@ interface InputFormProps {
   generateImage: boolean;
   setGenerateImage: (value: boolean) => void;
   onGenerate: () => void;
+  onFormatDraft?: () => void;
   isGenerating: boolean;
 }
 
@@ -118,6 +120,7 @@ export function InputForm({
   generateImage,
   setGenerateImage,
   onGenerate,
+  onFormatDraft,
   isGenerating,
 }: InputFormProps) {
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -139,14 +142,26 @@ export function InputForm({
       className="linkedin-card p-6 space-y-6"
     >
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <div className="p-2 bg-gradient-to-br from-linkedin-blue to-accent-primary rounded-lg">
-          <Sparkles className="w-5 h-5 text-white" />
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-gradient-to-br from-linkedin-blue to-accent-primary rounded-lg">
+            <Sparkles className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold text-linkedin-text">Create Your Post</h2>
+            <p className="text-sm text-linkedin-text-secondary">Powered by Claude AI</p>
+          </div>
         </div>
-        <div>
-          <h2 className="text-lg font-semibold text-linkedin-text">Create Your Post</h2>
-          <p className="text-sm text-linkedin-text-secondary">Powered by Claude AI</p>
-        </div>
+        {onFormatDraft && (
+          <button
+            onClick={onFormatDraft}
+            className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-linkedin-blue border border-linkedin-blue rounded-full hover:bg-linkedin-blue hover:text-white transition-colors"
+            title="Format your post manually in the editor"
+          >
+            <Edit3 className="w-4 h-4" />
+            Format Draft
+          </button>
+        )}
       </div>
 
       {/* Main Idea Input */}
