@@ -251,9 +251,13 @@ class BedrockTextProvider(TextModelProvider):
 
         parts.append("\n## Critical Reminders")
         parts.append("- Use Unicode bold (𝗧𝗵𝗶𝘀) NOT markdown (**this**)")
-        parts.append("- NO emojis")
+        parts.append("- Use minimal emojis for emphasis (max 3-5)")
         parts.append("- Hashtags in separate array, NOT in post_text")
-        parts.append("- Return ONLY valid JSON, no markdown code blocks")
+        parts.append("- Return ONLY valid JSON, no markdown code blocks, no explanations before or after")
+        parts.append("- Start your response with { and end with }")
+        parts.append("- Ensure the JSON is complete and valid - do not truncate it")
+        parts.append("- CRITICAL: Escape all double quotes inside string values with backslash (\\\")")
+        parts.append('  Example: "I wore \\"always available\\" as a badge" NOT "I wore "always available" as a badge"')
 
         return "\n".join(parts)
 
@@ -276,7 +280,9 @@ class BedrockTextProvider(TextModelProvider):
         parts.append("- Place key visuals in top 70% of frame")
         parts.append("- NO text/words inside images")
         parts.append("- Prompts must NOT be reusable for other posts")
-        parts.append("- Return ONLY valid JSON, no markdown code blocks")
+        parts.append("- Return ONLY valid JSON, no markdown code blocks, no explanations before or after")
+        parts.append("- Start your response with { and end with }")
+        parts.append("- Ensure the JSON is complete and valid - do not truncate it")
 
         return "\n".join(parts)
 
@@ -286,34 +292,138 @@ class BedrockTextProvider(TextModelProvider):
 
         content = raw_content.strip()
 
-        # Try to extract JSON from markdown code block
-        # Match ```json ... ``` or ``` ... ```
-        json_block_match = re.search(r'```(?:json)?\s*([\s\S]*?)```', content)
+        # First, try to extract JSON from markdown code block (most common case)
+        # Match ```json ... ``` or ``` ... ``` (non-greedy, then greedy fallback)
+        json_block_match = re.search(r'```(?:json)?\s*\n?([\s\S]*?)\n?```', content, re.DOTALL)
         if json_block_match:
             content = json_block_match.group(1).strip()
         else:
-            # Fallback to simple stripping
-            if content.startswith("```json"):
-                content = content[7:]
-            elif content.startswith("```"):
-                content = content[3:]
-            if content.endswith("```"):
-                content = content[:-3]
-            content = content.strip()
+            # Fallback: try to find JSON object boundaries
+            # Look for opening brace
+            start_idx = content.find('{')
+            if start_idx != -1:
+                content = content[start_idx:]
 
-        # Try to find JSON object boundaries if there's extra text
+            # Remove trailing markdown if present
+            if content.endswith('```'):
+                content = content[:-3].rstrip()
+
+            # Find the matching closing brace (handle nested objects)
+            brace_count = 0
+            end_idx = -1
+            for i, char in enumerate(content):
+                if char == '{':
+                    brace_count += 1
+                elif char == '}':
+                    brace_count -= 1
+                    if brace_count == 0:
+                        end_idx = i + 1
+                        break
+
+            if end_idx > 0:
+                content = content[:end_idx]
+
+        # Final cleanup: remove any leading/trailing whitespace or newlines
+        content = content.strip()
+
+        # If still doesn't start with '{', try one more time to find it
         if not content.startswith('{'):
             start = content.find('{')
             if start != -1:
                 content = content[start:]
+                # Find matching closing brace
+                brace_count = 0
+                end_idx = -1
+                for i, char in enumerate(content):
+                    if char == '{':
+                        brace_count += 1
+                    elif char == '}':
+                        brace_count -= 1
+                        if brace_count == 0:
+                            end_idx = i + 1
+                            break
+                if end_idx > 0:
+                    content = content[:end_idx]
 
-        if not content.endswith('}'):
-            # Find the last closing brace
-            end = content.rfind('}')
-            if end != -1:
-                content = content[:end + 1]
+        # Fix unescaped quotes inside JSON string values
+        # This is a common issue with Claude outputting: "I wore "always available" as a badge"
+        # Instead of: "I wore \"always available\" as a badge"
+        content = self._fix_unescaped_quotes(content)
 
         return content.strip()
+
+    def _fix_unescaped_quotes(self, json_str: str) -> str:
+        """
+        Fix unescaped double quotes inside JSON string values.
+
+        Claude often outputs: {"text": "I wore "always available" as a badge"}
+        This should be: {"text": "I wore \"always available\" as a badge"}
+
+        Strategy: Walk through the string, track if we're inside a JSON string value,
+        and escape any unescaped quotes we find inside string values.
+        """
+        result = []
+        i = 0
+        in_string = False
+        escape_next = False
+
+        while i < len(json_str):
+            char = json_str[i]
+
+            if escape_next:
+                result.append(char)
+                escape_next = False
+                i += 1
+                continue
+
+            if char == '\\':
+                result.append(char)
+                escape_next = True
+                i += 1
+                continue
+
+            if char == '"':
+                if not in_string:
+                    # Starting a string
+                    in_string = True
+                    result.append(char)
+                else:
+                    # We're inside a string - is this the end quote or an unescaped quote?
+                    # Look ahead to see if this looks like an end quote
+                    # End quotes are followed by: , } ] : or whitespace then these
+                    remaining = json_str[i+1:].lstrip()
+
+                    if not remaining:
+                        # End of input - this is the closing quote
+                        in_string = False
+                        result.append(char)
+                    elif remaining[0] in ',}]:':
+                        # This is a proper end quote
+                        in_string = False
+                        result.append(char)
+                    elif remaining.startswith('\n') or remaining.startswith('\r'):
+                        # End of line after quote - likely end quote
+                        # But check if it's followed by a key
+                        rest = remaining.lstrip()
+                        if rest and rest[0] == '"':
+                            # Next line starts with a key - this is end quote
+                            in_string = False
+                            result.append(char)
+                        else:
+                            # Probably an unescaped quote inside string
+                            result.append('\\')
+                            result.append(char)
+                    else:
+                        # This quote is inside the string value - escape it
+                        result.append('\\')
+                        result.append(char)
+                i += 1
+                continue
+
+            result.append(char)
+            i += 1
+
+        return ''.join(result)
 
     def _parse_text_response(
         self,
@@ -327,8 +437,10 @@ class BedrockTextProvider(TextModelProvider):
         try:
             data = json.loads(content)
         except json.JSONDecodeError as e:
+            # Show more context in error - include both cleaned and raw content
+            error_context = f"Cleaned content (first 1000 chars): {content[:1000]}\n\nRaw content (first 1000 chars): {raw_content[:1000]}"
             raise ProviderError(
-                f"Invalid JSON in response: {raw_content[:500]}",
+                f"Invalid JSON in response. {str(e)}\n\n{error_context}",
                 provider="bedrock",
                 model=model,
                 original_error=e,
@@ -339,6 +451,12 @@ class BedrockTextProvider(TextModelProvider):
         if isinstance(hashtags, str):
             hashtags = [h.strip() for h in hashtags.split(",") if h.strip()]
 
+        # Ensure required personal hashtags are present
+        required_hashtags = ["#SachinSaurav", "#BySachinSaurav"]
+        for tag in required_hashtags:
+            if tag not in hashtags:
+                hashtags.append(tag)
+
         # Parse image prompts (only if present - when generate_images=True)
         image_prompts = []
         for prompt_data in data.get("image_prompts", []):
@@ -348,6 +466,7 @@ class BedrockTextProvider(TextModelProvider):
                 prompt=prompt_data.get("prompt", ""),
                 style_notes=prompt_data.get("style_notes", ""),
                 composition_note=prompt_data.get("composition_note", ""),
+                negative_prompt=prompt_data.get("negative_prompt"),  # SDXL-specific
             ))
 
         # Parse image fingerprint (only if present)
@@ -392,6 +511,29 @@ class BedrockTextProvider(TextModelProvider):
             # Truncate if too long
             short_post = short_post[:400].rsplit('\n', 1)[0]
 
+        # Parse infographic_text - pre-extracted for efficient infographic rendering
+        from .base import InfographicTextStructure, InfographicSection
+        infographic_text = None
+        infographic_data = data.get("infographic_text")
+        if infographic_data:
+            sections = []
+            for sec in infographic_data.get("sections", [])[:3]:  # Max 3 sections
+                sections.append(InfographicSection(
+                    title=sec.get("title", ""),
+                    bullets=sec.get("bullets", [])[:3]  # Max 3 bullets
+                ))
+            infographic_text = InfographicTextStructure(
+                title=infographic_data.get("title", "Key Insight"),
+                subtitle=infographic_data.get("subtitle"),
+                sections=sections,
+                takeaway=infographic_data.get("takeaway"),
+            )
+
+        # Add CTA footer to post_text
+        from ..utils.constants import get_post_cta_footer
+        if post_text:
+            post_text = post_text.rstrip() + get_post_cta_footer()
+
         return TextGenerationResponse(
             post_text=post_text,
             short_post=short_post or "Check out this insight! 🚀",  # Ultimate fallback
@@ -400,6 +542,7 @@ class BedrockTextProvider(TextModelProvider):
             image_strategy=image_strategy,  # Can be None if generate_images=False
             image_prompts=image_prompts,
             image_fingerprint=image_fingerprint,
+            infographic_text=infographic_text,  # Pre-extracted for infographic rendering
             model_used=model,
             tokens_used=tokens_used,
             raw_response=raw_content,
@@ -418,8 +561,10 @@ class BedrockTextProvider(TextModelProvider):
         try:
             data = json.loads(content)
         except json.JSONDecodeError as e:
+            # Show more context in error - include both cleaned and raw content
+            error_context = f"Cleaned content (first 1000 chars): {content[:1000]}\n\nRaw content (first 1000 chars): {raw_content[:1000]}"
             raise ProviderError(
-                f"Invalid JSON in response: {raw_content[:500]}",
+                f"Invalid JSON in response. {str(e)}\n\n{error_context}",
                 provider="bedrock",
                 model=model,
                 original_error=e,
@@ -434,6 +579,7 @@ class BedrockTextProvider(TextModelProvider):
                 prompt=prompt_data.get("prompt", ""),
                 style_notes=prompt_data.get("style_notes", ""),
                 composition_note=prompt_data.get("composition_note", ""),
+                negative_prompt=prompt_data.get("negative_prompt"),  # SDXL-specific
             ))
 
         # Parse image fingerprint

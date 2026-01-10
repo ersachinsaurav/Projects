@@ -16,7 +16,13 @@ import {
   FileText,
   Settings2,
   Image as ImageIcon,
-  Edit3,
+  Moon,
+  Sun,
+  Ruler,
+  Mic,
+  MousePointerClick,
+  Users,
+  Cpu,
 } from 'lucide-react';
 import type {
   PostLength,
@@ -26,6 +32,15 @@ import type {
   ImageModelConfig,
 } from '../types';
 import { cn } from '../lib/utils';
+import {
+  POST_LENGTH_OPTIONS,
+  TONE_OPTIONS,
+  CTA_OPTIONS,
+  DEFAULT_AUDIENCES,
+  ALL_AUDIENCES,
+  TEXT_MODELS,
+  IMAGE_MODELS,
+} from '../lib/defaults';
 
 interface InputFormProps {
   idea: string;
@@ -46,57 +61,19 @@ interface InputFormProps {
   setTextModel: (value: TextModelConfig) => void;
   imageModel: ImageModelConfig;
   setImageModel: (value: ImageModelConfig) => void;
+  generatePostcard: boolean;
+  setGeneratePostcard: (value: boolean) => void;
+  postcardTheme: 'dark' | 'light';
+  setPostcardTheme: (value: 'dark' | 'light') => void;
   generateImage: boolean;
   setGenerateImage: (value: boolean) => void;
+  generateCarousel: boolean;
+  setGenerateCarousel: (value: boolean) => void;
   onGenerate: () => void;
-  onFormatDraft?: () => void;
   isGenerating: boolean;
 }
 
-const POST_LENGTH_OPTIONS: { value: PostLength; label: string; description: string }[] = [
-  { value: 'short', label: 'Short', description: '100-200 chars' },
-  { value: 'medium', label: 'Medium', description: '300-600 chars' },
-  { value: 'long', label: 'Long', description: '800-1200 chars' },
-];
-
-const TONE_OPTIONS: { value: Tone; label: string; description: string }[] = [
-  { value: 'professional', label: 'Professional', description: 'Formal, data-driven' },
-  { value: 'opinionated', label: 'Opinionated', description: 'Bold takes' },
-  { value: 'reflective', label: 'Reflective', description: 'Personal growth' },
-];
-
-const CTA_OPTIONS: { value: CTAStyle; label: string }[] = [
-  { value: 'question', label: 'Question' },
-  { value: 'statement', label: 'Statement' },
-  { value: 'none', label: 'None' },
-];
-
-// Default audiences (most common targets)
-const AUDIENCE_OPTIONS = [
-  'founders', 'engineers', 'leaders', 'developers',
-];
-
-// Extended audience options
-const EXTENDED_AUDIENCE_OPTIONS = [
-  'marketers', 'designers', 'product managers', 'data scientists',
-  'executives', 'entrepreneurs', 'investors', 'consultants',
-];
-
-// Claude models with latest Haiku
-const TEXT_MODELS = [
-  { provider: 'bedrock', model: 'claude-opus-4.5', label: 'Claude Opus 4.5', badge: 'Best' },
-  { provider: 'bedrock', model: 'claude-opus-4.1', label: 'Claude Opus 4.1' },
-  { provider: 'bedrock', model: 'claude-opus-4', label: 'Claude Opus 4' },
-  { provider: 'bedrock', model: 'claude-sonnet-4.5', label: 'Claude Sonnet 4.5', badge: 'Balanced' },
-  { provider: 'bedrock', model: 'claude-sonnet-4', label: 'Claude Sonnet 4' },
-  { provider: 'bedrock', model: 'claude-haiku-4.5', label: 'Claude Haiku 4.5', badge: 'Fast' },
-];
-
-// Image models
-const IMAGE_MODELS = [
-  { provider: 'nova', model: 'nova-canvas', label: 'Nova Canvas', badge: 'Best', description: 'Higher quality, detailed prompts' },
-  { provider: 'titan', model: 'titan-image-generator-v2', label: 'Titan v2', description: 'Fast, keyword-based prompts' },
-];
+// All constants are now imported from '../lib/defaults'
 
 export function InputForm({
   idea,
@@ -117,10 +94,15 @@ export function InputForm({
   setTextModel,
   imageModel,
   setImageModel,
+  generatePostcard,
+  setGeneratePostcard,
+  postcardTheme,
+  setPostcardTheme,
   generateImage,
   setGenerateImage,
+  generateCarousel,
+  setGenerateCarousel,
   onGenerate,
-  onFormatDraft,
   isGenerating,
 }: InputFormProps) {
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -144,24 +126,14 @@ export function InputForm({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-gradient-to-br from-linkedin-blue to-accent-primary rounded-lg">
+          <div className="p-2 rounded-lg bg-gradient-to-br from-linkedin-blue to-accent-primary">
             <Sparkles className="w-5 h-5 text-white" />
           </div>
           <div>
             <h2 className="text-lg font-semibold text-linkedin-text">Create Your Post</h2>
-            <p className="text-sm text-linkedin-text-secondary">Powered by Claude AI</p>
+            <p className="text-sm text-linkedin-text-secondary">Powered by AI</p>
           </div>
         </div>
-        {onFormatDraft && (
-          <button
-            onClick={onFormatDraft}
-            className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-linkedin-blue border border-linkedin-blue rounded-full hover:bg-linkedin-blue hover:text-white transition-colors"
-            title="Format your post manually in the editor"
-          >
-            <Edit3 className="w-4 h-4" />
-            Format Draft
-          </button>
-        )}
       </div>
 
       {/* Main Idea Input */}
@@ -202,7 +174,10 @@ export function InputForm({
       <div className="grid grid-cols-3 gap-4">
         {/* Post Length */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-linkedin-text">Length</label>
+          <label className="flex items-center gap-2 text-sm font-medium text-linkedin-text">
+            <Ruler className="w-4 h-4 text-linkedin-blue" />
+            Length
+          </label>
           <div className="flex flex-col gap-1">
             {POST_LENGTH_OPTIONS.map((option) => (
               <button
@@ -223,7 +198,10 @@ export function InputForm({
 
         {/* Tone */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-linkedin-text">Tone</label>
+          <label className="flex items-center gap-2 text-sm font-medium text-linkedin-text">
+            <Mic className="w-4 h-4 text-linkedin-blue" />
+            Tone
+          </label>
           <div className="flex flex-col gap-1">
             {TONE_OPTIONS.map((option) => (
               <button
@@ -244,7 +222,10 @@ export function InputForm({
 
         {/* CTA Style */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-linkedin-text">CTA</label>
+          <label className="flex items-center gap-2 text-sm font-medium text-linkedin-text">
+            <MousePointerClick className="w-4 h-4 text-linkedin-blue" />
+            CTA
+          </label>
           <div className="flex flex-col gap-1">
             {CTA_OPTIONS.map((option) => (
               <button
@@ -280,13 +261,16 @@ export function InputForm({
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
           exit={{ opacity: 0, height: 0 }}
-          className="space-y-4 pt-2"
+          className="space-y-6 pt-2"
         >
           {/* Target Audience */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-linkedin-text">Target Audience</label>
+            <label className="flex items-center gap-2 text-sm font-medium text-linkedin-text">
+              <Users className="w-4 h-4 text-linkedin-blue" />
+              Target Audience
+            </label>
             <div className="flex flex-wrap gap-2">
-              {AUDIENCE_OPTIONS.map((item) => (
+              {(DEFAULT_AUDIENCES as readonly string[]).map((item: string) => (
                 <button
                   key={item}
                   onClick={() => handleAudienceToggle(item)}
@@ -303,7 +287,7 @@ export function InputForm({
             </div>
             {/* Extended options */}
             <div className="flex flex-wrap gap-2 pt-1">
-              {EXTENDED_AUDIENCE_OPTIONS.map((item) => (
+              {(ALL_AUDIENCES as readonly string[]).filter((a: string) => !(DEFAULT_AUDIENCES as readonly string[]).includes(a as any)).map((item: string) => (
                 <button
                   key={item}
                   onClick={() => handleAudienceToggle(item)}
@@ -336,26 +320,30 @@ export function InputForm({
             />
           </div>
 
-          {/* Model Selection - Claude Only */}
+          {/* Model Selection - Ollama (Mistral/Llama) and Bedrock (Claude) */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-linkedin-text">Text Model (Claude)</label>
+            <label className="flex items-center gap-2 text-sm font-medium text-linkedin-text">
+              <Cpu className="w-4 h-4 text-linkedin-blue" />
+              Text Model
+            </label>
             <div className="grid grid-cols-2 gap-2">
               {TEXT_MODELS.map((model) => (
                 <button
-                  key={model.model}
-                  onClick={() => setTextModel({ provider: 'bedrock', model: model.model })}
+                  key={`${model.provider}-${model.model}`}
+                  onClick={() => setTextModel({ provider: model.provider, model: model.model })}
                   className={cn(
                     'px-3 py-2 text-sm rounded-lg transition-colors text-left relative',
-                    textModel.model === model.model
+                    textModel.provider === model.provider && textModel.model === model.model
                       ? 'bg-linkedin-blue text-white'
                       : 'bg-gray-100 text-linkedin-text hover:bg-gray-200'
                   )}
                 >
                   <div className="font-medium">{model.label}</div>
+                  <div className="text-xs opacity-70 capitalize mt-0.5">{model.provider}</div>
                   {model.badge && (
                     <span className={cn(
                       'absolute top-1 right-1 text-[10px] px-1.5 py-0.5 rounded-full',
-                      textModel.model === model.model
+                      textModel.provider === model.provider && textModel.model === model.model
                         ? 'bg-white/20 text-white'
                         : 'bg-linkedin-blue/10 text-linkedin-blue'
                     )}>
@@ -367,37 +355,137 @@ export function InputForm({
             </div>
           </div>
 
-          {/* Image Generation Toggle */}
+          {/* Generation Mode Selection */}
           <div className="space-y-2">
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
-              <div className="flex items-center gap-2">
-                <ImageIcon className="w-5 h-5 text-accent-primary" />
-                <div>
-                  <span className="text-sm font-medium text-linkedin-text">Generate AI Illustration</span>
-                  <p className="text-xs text-linkedin-text-secondary">
-                    {generateImage ? 'AI will generate an illustration (slower)' : 'Post Card will be generated (instant)'}
-                  </p>
-                </div>
-              </div>
+            <label className="flex items-center gap-2 text-sm font-medium text-linkedin-text">
+              <Sparkles className="w-4 h-4 text-accent-primary" />
+              Generation Mode
+            </label>
+            <div className="grid grid-cols-1 gap-2">
+              {/* Generate Postcard */}
               <button
-                onClick={() => setGenerateImage(!generateImage)}
+                onClick={() => {
+                  setGeneratePostcard(true);
+                  setGenerateImage(false);
+                  setGenerateCarousel(false);
+                  setPostcardTheme('dark'); // Reset theme to dark when switching back
+                }}
                 className={cn(
-                  'relative w-12 h-7 rounded-full transition-colors flex-shrink-0',
-                  generateImage ? 'bg-accent-primary' : 'bg-gray-300'
+                  'px-3 py-2 text-sm rounded-lg transition-colors text-left relative',
+                  generatePostcard
+                    ? 'bg-linkedin-blue text-white'
+                    : 'bg-gray-100 text-linkedin-text hover:bg-gray-200'
                 )}
               >
-                <span
-                  className={cn(
-                    'absolute top-1 w-5 h-5 rounded-full bg-white shadow-md transition-transform',
-                    generateImage ? 'left-6' : 'left-1'
-                  )}
-                />
+              <div className="flex items-center gap-2">
+                  <FileText className="w-4 h-4" />
+                  <div className="flex-1">
+                    <div className="font-medium">Postcard</div>
+                    <div className={cn('text-xs', generatePostcard ? 'text-white/80' : 'text-linkedin-text-secondary')}>
+                      Instant post card generation (no AI)
+                    </div>
+                  </div>
+                </div>
+                {generatePostcard && (
+                  <span className="absolute top-1 right-1 px-1.5 py-0.5 text-xs font-medium bg-white/20 text-white rounded">
+                    Default
+                  </span>
+                )}
               </button>
-            </div>
+
+              {/* Dark/Light Theme Selection - Only visible when Generate Postcard is ON */}
+              {generatePostcard && (
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-linkedin-text-secondary">Theme</label>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setPostcardTheme('dark')}
+                      className={cn(
+                        'flex-1 px-3 py-1.5 text-sm rounded-lg transition-colors text-center relative',
+                        postcardTheme === 'dark'
+                          ? 'bg-linkedin-blue text-white'
+                          : 'bg-gray-100 text-linkedin-text hover:bg-gray-200'
+                      )}
+                    >
+                      <div className="flex items-center justify-center gap-1.5">
+                        <Moon className="w-4 h-4" />
+                        <span className="font-medium">Dark</span>
+                      </div>
+                    </button>
+                    <button
+                      onClick={() => setPostcardTheme('light')}
+                      className={cn(
+                        'flex-1 px-3 py-1.5 text-sm rounded-lg transition-colors text-center relative',
+                        postcardTheme === 'light'
+                          ? 'bg-linkedin-blue text-white'
+                          : 'bg-gray-100 text-linkedin-text hover:bg-gray-200'
+                      )}
+                    >
+                      <div className="flex items-center justify-center gap-1.5">
+                        <Sun className="w-4 h-4" />
+                        <span className="font-medium">Light</span>
+                      </div>
+                    </button>
+                </div>
+              </div>
+              )}
+
+              {/* Generate AI Illustration */}
+              <button
+                onClick={() => {
+                  setGenerateImage(true);
+                  setGeneratePostcard(false);
+                  setGenerateCarousel(false);
+                  setPostcardTheme('dark'); // Reset theme to dark
+                }}
+                className={cn(
+                  'px-3 py-2 text-sm rounded-lg transition-colors text-left relative',
+                  generateImage
+                    ? 'bg-linkedin-blue text-white'
+                    : 'bg-gray-100 text-linkedin-text hover:bg-gray-200'
+                )}
+              >
+                <div className="flex items-center gap-2">
+                  <ImageIcon className="w-4 h-4" />
+                  <div className="flex-1">
+                    <div className="font-medium">AI Illustration</div>
+                    <div className={cn('text-xs', generateImage ? 'text-white/80' : 'text-linkedin-text-secondary')}>
+                      AI-generated illustrations (slower)
+                    </div>
+                  </div>
+                </div>
+              </button>
+
+              {/* Generate Carousel */}
+              <button
+                onClick={() => {
+                  setGenerateCarousel(true);
+                  setGeneratePostcard(false);
+                  setGenerateImage(false);
+                  setPostcardTheme('dark'); // Reset theme to dark
+                }}
+                className={cn(
+                  'px-3 py-2 text-sm rounded-lg transition-colors text-left relative',
+                  generateCarousel
+                    ? 'bg-linkedin-blue text-white'
+                    : 'bg-gray-100 text-linkedin-text hover:bg-gray-200'
+                )}
+              >
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4" />
+                  <div className="flex-1">
+                    <div className="font-medium">Carousel</div>
+                    <div className={cn('text-xs', generateCarousel ? 'text-white/80' : 'text-linkedin-text-secondary')}>
+                      AI cover + post card sections with arrows
+                    </div>
+                  </div>
+                </div>
+                </button>
+              </div>
           </div>
 
-          {/* Image Model Selection - Only show when image gen is ON */}
-          {generateImage && (
+          {/* Image Model Selection - Show when AI Illustration OR Carousel is ON */}
+          {(generateImage || generateCarousel) && (
             <div className="space-y-2">
               <label className="flex items-center gap-2 text-sm font-medium text-linkedin-text">
                 <ImageIcon className="w-4 h-4 text-accent-primary" />
@@ -407,11 +495,11 @@ export function InputForm({
                 {IMAGE_MODELS.map((model) => (
                   <button
                     key={model.model}
-                    onClick={() => setImageModel({ provider: model.provider as 'nova' | 'titan', model: model.model })}
+                    onClick={() => setImageModel({ provider: model.provider as 'nova' | 'titan' | 'sdxl', model: model.model })}
                     className={cn(
                       'px-3 py-2 text-sm rounded-lg transition-colors text-left relative',
                       imageModel.model === model.model
-                        ? 'bg-accent-primary text-white'
+                        ? 'bg-linkedin-blue text-white'
                         : 'bg-gray-100 text-linkedin-text hover:bg-gray-200'
                     )}
                   >
@@ -459,7 +547,11 @@ export function InputForm({
         ) : (
           <>
             <Sparkles className="w-5 h-5" />
-            Generate Post {generateImage ? '+ AI Image' : '+ Card'}
+            {generateCarousel
+              ? 'Generate Carousel'
+              : generateImage
+                ? 'Generate AI Illustration'
+                : 'Generate Postcard'}
           </>
         )}
       </button>

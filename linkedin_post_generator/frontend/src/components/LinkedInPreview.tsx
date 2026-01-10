@@ -25,25 +25,23 @@ import {
   Strikethrough,
   Undo2,
   Redo2,
-  Download,
   RefreshCw,
   Sparkles,
   Image as ImageIcon,
   X,
-  FileText,
   MessageSquare,
   ThumbsUp,
   Share2,
   Send,
 } from 'lucide-react';
 import type { TextGenerationResponse, ImageGenerationResponse } from '../types';
-import { cn, copyToClipboard, formatNumber, formatDuration, downloadImage, downloadPDF } from '../lib/utils';
+import { cn, copyToClipboard, formatNumber, formatDuration, downloadImage, downloadPDF, getFilenameFromContent } from '../lib/utils';
 import {
-  toUnicodeBold,
-  toUnicodeItalic,
-  toUnicodeUnderline,
-  toUnicodeStrikethrough,
   removeUnicodeFormatting,
+  toggleBold,
+  toggleItalic,
+  toggleUnderline,
+  toggleStrikethrough,
 } from '../lib/unicode';
 import { PROFILE_CONFIG, LINKEDIN_LIMITS, EDITOR_CONFIG } from '../lib/constants';
 import { RecommendationSection } from './RecommendationSection';
@@ -57,9 +55,13 @@ interface LinkedInPreviewProps {
   onTextChange?: (text: string, hashtags: string[]) => void;
   onRegenerateText: () => void;
   onRegenerateImages: () => void;
-  onGeneratePostCard?: (theme: 'dark' | 'light') => void;
+  onGeneratePostCard?: (theme?: 'dark' | 'light') => void;
   onGenerateWithRecommendation?: (type: string, isAlternative?: boolean) => void;
   useAIImages: boolean;
+  usePostcard?: boolean;
+  useCarousel?: boolean;  // Explicitly track carousel mode for button labels
+  postcardTheme?: 'dark' | 'light';
+  isManualMode?: boolean;  // If true, starts in edit mode for direct text entry
 }
 
 export function LinkedInPreview({
@@ -73,11 +75,23 @@ export function LinkedInPreview({
   onGeneratePostCard,
   onGenerateWithRecommendation,
   useAIImages,
+  usePostcard = false,
+  useCarousel = false,
+  postcardTheme = 'dark',
+  isManualMode = false,
 }: LinkedInPreviewProps) {
-  const [isEditing, setIsEditing] = useState(false);
+  // In manual mode, start in editing mode by default
+  const [isEditing, setIsEditing] = useState(isManualMode);
   const [editedContent, setEditedContent] = useState(''); // Combined text + hashtags
   const [copied, setCopied] = useState(false);
-  const [selectedImage, setSelectedImage] = useState<number | null>(null);
+  const [selectedImage, setSelectedImage] = useState<number>(0);
+  const [isGalleryOpen, setIsGalleryOpen] = useState(false);
+  const [isZoomed, setIsZoomed] = useState(false);
+  const [panPosition, setPanPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [mouseDownPos, setMouseDownPos] = useState<{ x: number; y: number } | null>(null);
+  const imageRef = useRef<HTMLImageElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Undo/Redo history
@@ -216,20 +230,20 @@ export function LinkedInPreview({
           break;
         case 'b':
           e.preventDefault();
-          applyFormatting(toUnicodeBold);
+          applyFormatting(toggleBold);
           break;
         case 'i':
           e.preventDefault();
-          applyFormatting(toUnicodeItalic);
+          applyFormatting(toggleItalic);
           break;
         case 'u':
           e.preventDefault();
-          applyFormatting(toUnicodeUnderline);
+          applyFormatting(toggleUnderline);
           break;
         case 's':
           if (e.shiftKey) {
             e.preventDefault();
-            applyFormatting(toUnicodeStrikethrough);
+            applyFormatting(toggleStrikethrough);
           }
           break;
         case 'r':
@@ -243,12 +257,31 @@ export function LinkedInPreview({
   }, [applyFormatting, resetFormatting, handleUndo, handleRedo]);
 
   const handleDownloadImage = (base64: string, index: number) => {
-    downloadImage(base64, `linkedin-image-${index + 1}.png`);
+    // Use shared utility for consistent filename generation
+    const concept = textData?.image_prompts?.[index]?.concept || imageData?.images[index]?.concept;
+    const filename = getFilenameFromContent({
+      title: textData?.infographic_text?.title,
+      postText: textData?.post_text,
+      concept,
+      defaultName: `linkedin-post-image-${index + 1}`,
+      extension: 'png',
+    });
+
+    downloadImage(base64, filename);
   };
 
   const handleDownloadPDF = () => {
     if (imageData?.pdf_base64) {
-      downloadPDF(imageData.pdf_base64, 'linkedin-carousel.pdf');
+      let filename = imageData.pdf_title || 'linkedin-carousel.pdf';
+
+      // If filename doesn't have .pdf extension or needs sanitization, ensure it's clean
+      if (!filename.endsWith('.pdf')) {
+        filename = filename + '.pdf';
+      }
+
+      // Ensure filename is already sanitized (backend should handle this, but double-check)
+      // Backend now sends sanitized filenames, so this should be fine
+      downloadPDF(imageData.pdf_base64, filename);
     }
   };
 
@@ -256,8 +289,96 @@ export function LinkedInPreview({
   const isOverLimit = charCount > LINKEDIN_LIMITS.maxPostChars;
   const hasImages = imageData && imageData.images.length > 0;
 
-  // Empty state
-  if (!textData && !isTextLoading) {
+  // Reset selected image when images change
+  useEffect(() => {
+    if (hasImages && imageData) {
+      if (selectedImage >= imageData.images.length) {
+        setSelectedImage(0);
+      }
+    }
+  }, [hasImages, imageData, selectedImage]);
+
+  // Reset zoom when gallery closes or image changes
+  useEffect(() => {
+    if (!isGalleryOpen) {
+      setIsZoomed(false);
+      setPanPosition({ x: 0, y: 0 });
+    }
+  }, [isGalleryOpen]);
+
+  useEffect(() => {
+    setIsZoomed(false);
+    setPanPosition({ x: 0, y: 0 });
+  }, [selectedImage]);
+
+  // Keyboard navigation for gallery
+  useEffect(() => {
+    if (!isGalleryOpen || !imageData) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't handle if user is typing in an input
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+
+      switch (e.key) {
+        case 'ArrowLeft':
+          e.preventDefault();
+          if (!isZoomed && selectedImage > 0) {
+            setSelectedImage(selectedImage - 1);
+          }
+          break;
+        case 'ArrowRight':
+          e.preventDefault();
+          if (!isZoomed && selectedImage < imageData.images.length - 1) {
+            setSelectedImage(selectedImage + 1);
+          }
+          break;
+        case 'Escape':
+          e.preventDefault();
+          setIsGalleryOpen(false);
+          setIsZoomed(false);
+          setPanPosition({ x: 0, y: 0 });
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isGalleryOpen, imageData, selectedImage, isZoomed]);
+
+  // Pan/drag handlers for zoomed image
+  const handleMouseDown = (e: React.MouseEvent<HTMLImageElement>) => {
+    if (!isZoomed) return;
+    e.preventDefault();
+    setIsDragging(true);
+    setMouseDownPos({ x: e.clientX, y: e.clientY });
+    setDragStart({
+      x: e.clientX - panPosition.x,
+      y: e.clientY - panPosition.y,
+    });
+  };
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLImageElement>) => {
+    if (!isZoomed || !isDragging) return;
+    e.preventDefault();
+    setPanPosition({
+      x: e.clientX - dragStart.x,
+      y: e.clientY - dragStart.y,
+    });
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleMouseLeave = () => {
+    setIsDragging(false);
+    setMouseDownPos(null);
+  };
+
+  // Empty state - but NOT for manual mode (show editor directly)
+  if (!textData && !isTextLoading && !isManualMode) {
     return (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -398,30 +519,30 @@ export function LinkedInPreview({
             <div className="w-px h-5 bg-gray-300 mx-1" />
 
             <button
-              onClick={() => applyFormatting(toUnicodeBold)}
+              onClick={() => applyFormatting(toggleBold)}
               className="p-1.5 rounded hover:bg-gray-200 transition-colors"
-              title="Bold (⌘B)"
+              title="Bold (⌘B) - Toggle"
             >
               <Bold className="w-4 h-4 text-linkedin-text" />
             </button>
             <button
-              onClick={() => applyFormatting(toUnicodeItalic)}
+              onClick={() => applyFormatting(toggleItalic)}
               className="p-1.5 rounded hover:bg-gray-200 transition-colors"
-              title="Italic (⌘I)"
+              title="Italic (⌘I) - Toggle"
             >
               <Italic className="w-4 h-4 text-linkedin-text" />
             </button>
             <button
-              onClick={() => applyFormatting(toUnicodeUnderline)}
+              onClick={() => applyFormatting(toggleUnderline)}
               className="p-1.5 rounded hover:bg-gray-200 transition-colors"
-              title="Underline (⌘U)"
+              title="Underline (⌘U) - Toggle"
             >
               <Underline className="w-4 h-4 text-linkedin-text" />
             </button>
             <button
-              onClick={() => applyFormatting(toUnicodeStrikethrough)}
+              onClick={() => applyFormatting(toggleStrikethrough)}
               className="p-1.5 rounded hover:bg-gray-200 transition-colors"
-              title="Strikethrough (⌘⇧S)"
+              title="Strikethrough (⌘⇧S) - Toggle"
             >
               <Strikethrough className="w-4 h-4 text-linkedin-text" />
             </button>
@@ -455,64 +576,150 @@ export function LinkedInPreview({
               'font-sans text-sm leading-relaxed text-linkedin-text bg-transparent',
               isOverLimit && 'text-red-500'
             )}
-            placeholder="Your post content will appear here..."
+            placeholder={isManualMode
+              ? "Paste your post here...\n\nUse the toolbar above to format text.\nAdd #hashtags at the end."
+              : "Your post content will appear here..."
+            }
           />
         </div>
 
-        {/* Image Section */}
-        <div className="border-t border-linkedin-border">
-          {isImageLoading ? (
-            <div className="p-4">
-              <div className="w-full h-80 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg flex items-center justify-center">
-                <div className="text-center">
-                  <RefreshCw className="w-12 h-12 mx-auto mb-3 text-linkedin-blue animate-spin" />
-                  <span className="text-base font-medium text-gray-600">Generating image...</span>
-                  <p className="text-sm text-gray-400 mt-1">This may take a few moments</p>
+        {/* Image Section - Hidden in manual mode unless there's an image */}
+        {(!isManualMode || hasImages || isImageLoading) && (
+          <div className="border-t border-linkedin-border">
+            {isImageLoading ? (
+              <div className="p-4">
+                <div className="w-full h-80 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg flex items-center justify-center">
+                  <div className="text-center">
+                    <RefreshCw className="w-12 h-12 mx-auto mb-3 text-linkedin-blue animate-spin" />
+                    <span className="text-base font-medium text-gray-600">Generating image...</span>
+                    <p className="text-sm text-gray-400 mt-1">This may take a few moments</p>
+                  </div>
                 </div>
               </div>
-            </div>
-          ) : hasImages ? (
-            <div className="relative">
-              {/* Single image or first image of carousel */}
-              <img
-                src={`data:image/${imageData.images[0].format};base64,${imageData.images[0].base64_data}`}
-                alt="Post image"
-                className="w-full object-cover cursor-pointer"
-                onClick={() => setSelectedImage(0)}
-              />
+            ) : hasImages ? (
+              <div className="relative">
+                {/* Image container with navigation */}
+                <div className="relative group">
+                  {/* Current image display */}
+                  <img
+                    src={`data:image/${imageData.images[selectedImage].format};base64,${imageData.images[selectedImage].base64_data}`}
+                    alt="Post image"
+                    className="w-full object-cover cursor-pointer"
+                    onClick={() => setIsGalleryOpen(true)}
+                  />
 
-              {/* Multiple images indicator */}
-              {imageData.images.length > 1 && (
-                <div className="absolute top-4 right-4 bg-black/70 text-white text-xs px-2 py-1 rounded-full">
-                  1 / {imageData.images.length}
-                </div>
-              )}
+                  {/* Download buttons overlay - appears on hover */}
+                  <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity z-20 flex items-center gap-2">
+                    {/* PDF Download button */}
+                    {imageData.pdf_base64 && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDownloadPDF();
+                        }}
+                        className="p-2 bg-white/90 hover:bg-white rounded-full shadow-lg transition-all hover:scale-110"
+                        title="Download PDF"
+                      >
+                        <div className="w-5 h-5 text-linkedin-text flex items-center justify-center font-bold text-xs">PDF</div>
+                      </button>
+                    )}
+                    {/* Image Download button */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDownloadImage(imageData.images[selectedImage].base64_data, selectedImage);
+                      }}
+                      className="p-2 bg-white/90 hover:bg-white rounded-full shadow-lg transition-all hover:scale-110"
+                      title="Download image"
+                    >
+                      <ImageIcon className="w-5 h-5 text-linkedin-text" />
+                    </button>
+                  </div>
 
-              {/* Image thumbnails for carousel */}
-              {imageData.images.length > 1 && (
-                <div className="p-2 flex gap-2 overflow-x-auto">
-                  {imageData.images.map((img, idx) => (
-                    <img
-                      key={img.id}
-                      src={`data:image/${img.format};base64,${img.base64_data}`}
-                      alt={`Image ${idx + 1}`}
-                      className={cn(
-                        'w-16 h-16 object-cover rounded cursor-pointer border-2 transition-all',
-                        idx === 0 ? 'border-linkedin-blue' : 'border-transparent hover:border-gray-300'
-                      )}
-                      onClick={() => setSelectedImage(idx)}
-                    />
-                  ))}
+                  {/* Navigation arrows for multiple images */}
+                  {imageData.images.length > 1 && (
+                    <>
+                      {/* Previous button */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedImage(Math.max(0, selectedImage - 1));
+                        }}
+                        disabled={selectedImage === 0}
+                        className={cn(
+                          'absolute left-2 top-1/2 -translate-y-1/2 p-2 rounded-full text-white transition-all z-10',
+                          'flex items-center justify-center',
+                          selectedImage === 0
+                            ? 'bg-black/30 opacity-50 cursor-not-allowed'
+                            : 'bg-black/60 hover:bg-black/80 opacity-100'
+                        )}
+                        aria-label="Previous image"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                        </svg>
+                      </button>
+
+                      {/* Next button */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedImage(Math.min(imageData.images.length - 1, selectedImage + 1));
+                        }}
+                        disabled={selectedImage === imageData.images.length - 1}
+                        className={cn(
+                          'absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full text-white transition-all z-10',
+                          'flex items-center justify-center',
+                          selectedImage === imageData.images.length - 1
+                            ? 'bg-black/30 opacity-50 cursor-not-allowed'
+                            : 'bg-black/60 hover:bg-black/80 opacity-100'
+                        )}
+                        aria-label="Next image"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </button>
+                    </>
+                  )}
+
+                  {/* Multiple images indicator */}
+                  {imageData.images.length > 1 && (
+                    <div className={cn(
+                      "absolute top-4 bg-black/70 text-white text-xs px-2 py-1 rounded-full",
+                      imageData.pdf_base64 ? "right-28" : "right-16"
+                    )}>
+                      {selectedImage + 1} / {imageData.images.length}
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          ) : (
-            <div className="p-4 text-center text-sm text-linkedin-text-secondary">
-              <ImageIcon className="w-8 h-8 mx-auto mb-2 opacity-50" />
-              <p>Image will appear here after generation</p>
-            </div>
-          )}
-        </div>
+
+                {/* Image thumbnails for carousel */}
+                {imageData.images.length > 1 && (
+                  <div className="p-2 flex gap-2 overflow-x-auto">
+                    {imageData.images.map((img, idx) => (
+                      <img
+                        key={img.id}
+                        src={`data:image/${img.format};base64,${img.base64_data}`}
+                        alt={`Image ${idx + 1}`}
+                        className={cn(
+                          'w-16 h-16 object-cover rounded cursor-pointer border-2 transition-all',
+                          selectedImage === idx ? 'border-linkedin-blue' : 'border-transparent hover:border-gray-300'
+                        )}
+                        onClick={() => setSelectedImage(idx)}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : !isManualMode ? (
+              <div className="p-4 text-center text-sm text-linkedin-text-secondary">
+                <ImageIcon className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                <p>Image will appear here after generation</p>
+              </div>
+            ) : null}
+          </div>
+        )}
 
         {/* LinkedIn-style Engagement Bar */}
         <div className="px-4 py-2 border-t border-linkedin-border">
@@ -522,9 +729,9 @@ export function LinkedInPreview({
                 <span className="w-4 h-4 rounded-full bg-blue-500 flex items-center justify-center text-white text-[8px]">👍</span>
                 <span className="w-4 h-4 rounded-full bg-red-500 flex items-center justify-center text-white text-[8px]">❤️</span>
               </span>
-              <span className="ml-1">42</span>
+              <span className="ml-1">41,435</span>
             </span>
-            <span>3 comments • 1 repost</span>
+            <span>61 comments • 52 reposts</span>
           </div>
           <div className="flex items-center justify-around py-1">
             <button className="flex items-center gap-2 px-4 py-2 rounded hover:bg-gray-100 transition-colors text-linkedin-text-secondary">
@@ -546,8 +753,8 @@ export function LinkedInPreview({
           </div>
         </div>
 
-        {/* AI Image Recommendation */}
-        {textData?.image_recommendation && (
+        {/* AI Image Recommendation - Hidden in manual mode */}
+        {!isManualMode && textData?.image_recommendation && (
           <RecommendationSection
             recommendation={textData.image_recommendation}
             onGenerate={onGenerateWithRecommendation}
@@ -556,40 +763,49 @@ export function LinkedInPreview({
           />
         )}
 
-        {/* Regenerate Buttons */}
-        <div className="px-4 py-3 bg-gray-50 border-t border-linkedin-border flex items-center gap-3">
-          <button
-            onClick={onRegenerateText}
-            disabled={isTextLoading}
-            className={cn(
-              'flex-1 py-2 px-4 rounded-lg font-medium text-sm flex items-center justify-center gap-2 transition-colors',
-              isTextLoading
-                ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                : 'bg-white border border-linkedin-border text-linkedin-text hover:bg-gray-50'
-            )}
-          >
-            <RefreshCw className={cn('w-4 h-4', isTextLoading && 'animate-spin')} />
-            Regenerate Text
-          </button>
-          <button
-            onClick={useAIImages ? onRegenerateImages : () => onGeneratePostCard?.('dark')}
-            disabled={isImageLoading || !textData}
-            className={cn(
-              'flex-1 py-2 px-4 rounded-lg font-medium text-sm flex items-center justify-center gap-2 transition-colors',
-              isImageLoading || !textData
-                ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+        {/* Regenerate Buttons - Hidden in manual mode */}
+        {!isManualMode && (
+          <div className="px-4 py-3 bg-gray-50 border-t border-linkedin-border flex items-center gap-3">
+            <button
+              onClick={onRegenerateText}
+              disabled={isTextLoading}
+              className={cn(
+                'flex-1 py-2 px-4 rounded-lg font-medium text-sm flex items-center justify-center gap-2 transition-colors',
+                isTextLoading
+                  ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                  : 'bg-white border border-linkedin-border text-linkedin-text hover:bg-gray-50'
+              )}
+            >
+              <RefreshCw className={cn('w-4 h-4', isTextLoading && 'animate-spin')} />
+              Regenerate Text
+            </button>
+            <button
+              onClick={useAIImages ? onRegenerateImages : () => onGeneratePostCard?.(postcardTheme)}
+              disabled={isImageLoading || !textData}
+              className={cn(
+                'flex-1 py-2 px-4 rounded-lg font-medium text-sm flex items-center justify-center gap-2 transition-colors',
+                isImageLoading || !textData
+                  ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                  : useAIImages
+                    ? 'bg-gradient-to-r from-accent-primary to-accent-secondary text-white hover:shadow-lg'
+                    : 'bg-gray-900 text-white hover:bg-gray-800'
+              )}
+            >
+              <Sparkles className={cn('w-4 h-4', isImageLoading && 'animate-pulse')} />
+              {useCarousel
+                ? 'Regenerate Carousel'
                 : useAIImages
-                  ? 'bg-gradient-to-r from-accent-primary to-accent-secondary text-white hover:shadow-lg'
-                  : 'bg-gray-900 text-white hover:bg-gray-800'
-            )}
-          >
-            <Sparkles className={cn('w-4 h-4', isImageLoading && 'animate-pulse')} />
-            {useAIImages ? 'Regenerate AI Image' : 'Regenerate Card'}
-          </button>
-        </div>
+                  ? 'Regenerate AI Image'
+                  : usePostcard
+                    ? 'Regenerate Postcard'
+                    : 'Regenerate Card'}
+            </button>
+          </div>
+        )}
 
-        {/* Stats Footer */}
-        {(textData?.generation_time_ms || imageData?.generation_time_ms) && (
+
+        {/* Stats Footer - Hidden in manual mode */}
+        {!isManualMode && (textData?.generation_time_ms || imageData?.generation_time_ms) && (
           <div className="px-4 py-2 bg-gray-50 border-t border-linkedin-border flex items-center justify-between text-xs text-linkedin-text-secondary">
             <div className="flex items-center gap-4">
               {textData?.tokens_used && (
@@ -626,90 +842,181 @@ export function LinkedInPreview({
           </div>
         )}
 
-          {/* Download Options */}
-          {hasImages && (
-            <div className="px-4 py-2 bg-gray-50 border-t border-linkedin-border flex items-center justify-end gap-2">
-              <button
-                onClick={() => handleDownloadImage(imageData.images[0].base64_data, 0)}
-                className="text-xs text-linkedin-blue hover:underline flex items-center gap-1"
-              >
-                <Download className="w-3 h-3" />
-                Download Image
-              </button>
-              {imageData.images.length > 1 && imageData.pdf_base64 && (
-                <button
-                  onClick={handleDownloadPDF}
-                  className="text-xs text-linkedin-blue hover:underline flex items-center gap-1"
-                >
-                  <FileText className="w-3 h-3" />
-                  Download PDF
-                </button>
-              )}
-            </div>
-          )}
           </div>
         )}
       </motion.div>
 
       {/* Image Lightbox */}
       <AnimatePresence>
-        {selectedImage !== null && imageData && (
+        {isGalleryOpen && imageData && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4"
-            onClick={() => setSelectedImage(null)}
+            className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center pt-20 pb-4 px-4"
+            onClick={() => {
+              if (isZoomed) {
+                setIsZoomed(false);
+              } else {
+                setIsGalleryOpen(false);
+              }
+            }}
           >
-            <button
-              className="absolute top-4 right-4 p-2 bg-white/10 rounded-full hover:bg-white/20 transition-colors"
-              onClick={() => setSelectedImage(null)}
-            >
-              <X className="w-6 h-6 text-white" />
-            </button>
+            {/* Close and Download buttons */}
+            <div className="absolute top-20 right-4 flex items-center gap-2 z-[60]">
+              {/* PDF Download button */}
+              {!isZoomed && imageData.pdf_base64 && (
+                <button
+                  className="p-2 bg-white/20 hover:bg-white/30 rounded-full transition-colors"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDownloadPDF();
+                  }}
+                  title="Download PDF"
+                >
+                  <div className="w-6 h-6 text-white flex items-center justify-center font-bold text-sm">PDF</div>
+                </button>
+              )}
+              {/* Image Download button */}
+              {!isZoomed && (
+                <button
+                  className="p-2 bg-white/20 hover:bg-white/30 rounded-full transition-colors"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const currentImage = imageData.images[selectedImage];
+                    handleDownloadImage(currentImage.base64_data, selectedImage);
+                  }}
+                  title="Download image"
+                >
+                  <ImageIcon className="w-6 h-6 text-white" />
+                </button>
+              )}
+
+              {/* Close button */}
+              <button
+                className="p-2 bg-white/20 hover:bg-white/30 rounded-full transition-colors"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsGalleryOpen(false);
+                  setIsZoomed(false);
+                  setPanPosition({ x: 0, y: 0 });
+                }}
+                title="Close gallery"
+              >
+                <X className="w-6 h-6 text-white" />
+              </button>
+            </div>
 
             <motion.img
-              initial={{ scale: 0.9 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0.9 }}
+              ref={imageRef}
+              key={selectedImage}
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{
+                scale: isZoomed ? 1.5 : 1,
+                opacity: 1,
+                x: isZoomed ? panPosition.x : 0,
+                y: isZoomed ? panPosition.y : 0,
+                cursor: isZoomed ? (isDragging ? 'grabbing' : 'grab') : 'zoom-in'
+              }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ duration: 0.2 }}
               src={`data:image/${imageData.images[selectedImage].format};base64,${imageData.images[selectedImage].base64_data}`}
-              alt="Full size preview"
-              className="max-w-full max-h-full object-contain rounded-lg"
-              onClick={(e) => e.stopPropagation()}
+              alt={`Full size preview ${selectedImage + 1}`}
+              className={cn(
+                'object-contain rounded-lg select-none',
+                isZoomed
+                  ? 'max-w-[95vw] max-h-[95vh]'
+                  : 'max-w-[85vw] max-h-[75vh]'
+              )}
+              onClick={(e) => {
+                e.stopPropagation();
+                // Only toggle zoom if we didn't drag (check if mouse moved more than 5px)
+                if (mouseDownPos) {
+                  const deltaX = Math.abs(e.clientX - mouseDownPos.x);
+                  const deltaY = Math.abs(e.clientY - mouseDownPos.y);
+                  // If moved more than 5px, it was a drag, don't toggle zoom
+                  if (deltaX > 5 || deltaY > 5) {
+                    setMouseDownPos(null);
+                    return;
+                  }
+                }
+                setMouseDownPos(null);
+                setIsZoomed(!isZoomed);
+                if (!isZoomed) {
+                  setPanPosition({ x: 0, y: 0 });
+                }
+              }}
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseLeave}
+              title={isZoomed ? 'Drag to pan, click to zoom out' : 'Click to zoom in'}
             />
 
             {/* Navigation for multiple images */}
-            {imageData.images.length > 1 && (
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-4">
+            {imageData.images.length > 1 && !isZoomed && (
+              <>
+                {/* Previous button */}
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     setSelectedImage(Math.max(0, selectedImage - 1));
                   }}
                   disabled={selectedImage === 0}
-                  className="px-4 py-2 bg-white/20 rounded-full text-white disabled:opacity-50"
+                  className={cn(
+                    'absolute left-4 top-1/2 -translate-y-1/2 p-3 rounded-full text-white transition-all z-50',
+                    'flex items-center justify-center',
+                    selectedImage === 0
+                      ? 'bg-white/10 opacity-50 cursor-not-allowed'
+                      : 'bg-white/20 hover:bg-white/30 opacity-100'
+                  )}
+                  aria-label="Previous image"
                 >
-                  Previous
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
                 </button>
-                <span className="text-white">
-                  {selectedImage + 1} / {imageData.images.length}
-                </span>
+
+                {/* Next button */}
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     setSelectedImage(Math.min(imageData.images.length - 1, selectedImage + 1));
                   }}
                   disabled={selectedImage === imageData.images.length - 1}
-                  className="px-4 py-2 bg-white/20 rounded-full text-white disabled:opacity-50"
+                  className={cn(
+                    'absolute right-4 top-1/2 -translate-y-1/2 p-3 rounded-full text-white transition-all z-50',
+                    'flex items-center justify-center',
+                    selectedImage === imageData.images.length - 1
+                      ? 'bg-white/10 opacity-50 cursor-not-allowed'
+                      : 'bg-white/20 hover:bg-white/30 opacity-100'
+                  )}
+                  aria-label="Next image"
                 >
-                  Next
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
                 </button>
+
+                {/* Image counter */}
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/70 text-white text-sm px-4 py-2 rounded-full z-50">
+                  {selectedImage + 1} / {imageData.images.length}
+                </div>
+              </>
+            )}
+
+            {/* Zoom indicator */}
+            {isZoomed && (
+              <div className="absolute top-20 left-1/2 -translate-x-1/2 bg-black/70 text-white text-sm px-4 py-2 rounded-full z-50">
+                Drag to pan • Click to zoom out • ESC to close
               </div>
             )}
+
           </motion.div>
         )}
       </AnimatePresence>
     </>
   );
 }
+
 

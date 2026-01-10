@@ -33,6 +33,9 @@ class SessionData:
     audience: Optional[list] = None
     text_model_used: Optional[str] = None
 
+    # Infographic text structure (pre-extracted to avoid second LLM call)
+    infographic_text: Optional[dict] = None
+
     # Image prompt results
     image_prompts: Optional[list] = None
     image_fingerprint: Optional[dict] = None

@@ -125,6 +125,10 @@ class TitanImageProvider(ImageModelProvider):
 
                 logger.info(f"Titan image {prompt_data.id}: {enhanced_prompt}")
 
+                # Use requested dimensions if provided (e.g., 512x512 for carousel), otherwise default to 1024x1024
+                img_width = request.width if request.width else 1024
+                img_height = request.height if request.height else 1024
+
                 body = json.dumps({
                     "taskType": "TEXT_IMAGE",
                     "textToImageParams": {
@@ -133,8 +137,8 @@ class TitanImageProvider(ImageModelProvider):
                     },
                     "imageGenerationConfig": {
                         "numberOfImages": 1,
-                        "height": 1024,
-                        "width": 1024,
+                        "height": img_height,
+                        "width": img_width,
                         "cfgScale": 8.0,
                     },
                 })
@@ -155,8 +159,8 @@ class TitanImageProvider(ImageModelProvider):
                         base64_data=image_data,
                         prompt_used=enhanced_prompt,
                         format="png",
-                        width=1024,
-                        height=1024,
+                        width=img_width,
+                        height=img_height,
                     ))
                     logger.info(f"Successfully generated Titan image {prompt_data.id}")
                 else:

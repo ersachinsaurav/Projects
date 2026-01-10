@@ -1,16 +1,32 @@
 """
-Image Enhancement Prompts
-==========================
-Additional prompts for image generation optimization.
+Image Enhancement Prompts (LEGACY)
+===================================
+DEPRECATED: These functions are superseded by the new image_gen/ module.
+
+The new system provides:
+- Model-specific prompt builders: image_gen/models/ (nova.py, sdxl.py, titan.py)
+- Use-case handlers: image_gen/usecases/ (carousel.py, illustration.py, postcard.py)
+- Main entry point: get_image_prompt() and get_negative_prompt_for_model()
+
+These legacy functions are kept for backward compatibility but are NOT actively used.
+Consider using the new image_gen module instead.
 """
+
+import warnings
 
 
 def get_image_enhancement_prompt() -> str:
     """
     Return instructions for enhancing image prompts.
 
+    DEPRECATED: Use image_gen module instead.
     This is used to refine raw image prompts before sending to image models.
     """
+    warnings.warn(
+        "get_image_enhancement_prompt is deprecated. Use image_gen module instead.",
+        DeprecationWarning,
+        stacklevel=2
+    )
     return '''You are an AI image prompt engineer specializing in professional,
 LinkedIn-appropriate imagery.
 
@@ -39,8 +55,14 @@ def get_negative_prompt() -> str:
     """
     Return negative prompt for image generation.
 
+    DEPRECATED: Use get_negative_prompt_for_model() from image_gen module instead.
     Used by models that support negative prompts (like Titan).
     """
+    warnings.warn(
+        "get_negative_prompt is deprecated. Use get_negative_prompt_for_model() instead.",
+        DeprecationWarning,
+        stacklevel=2
+    )
     return '''text, words, letters, numbers, watermark, signature,
 logo, brand name, writing, caption, label,
 blurry, low quality, distorted, ugly, deformed,
@@ -53,7 +75,14 @@ busy, cluttered, chaotic, messy'''
 def get_linkedin_image_style_presets() -> dict:
     """
     Return preset style configurations for different LinkedIn post types.
+
+    DEPRECATED: The new image_gen module handles styles internally per usecase.
     """
+    warnings.warn(
+        "get_linkedin_image_style_presets is deprecated. Use image_gen usecases instead.",
+        DeprecationWarning,
+        stacklevel=2
+    )
     return {
         "thought_leadership": {
             "visual_style": "minimal",

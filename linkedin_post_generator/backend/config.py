@@ -20,7 +20,7 @@ class Settings(BaseSettings):
 
     # API Settings
     api_prefix: str = "/api/v1"
-    cors_origins: Union[str, list[str]] = "http://localhost:5173,http://localhost:8000"
+    cors_origins: Union[str, list[str]] = "http://localhost:5173,http://localhost:5170"
 
     @field_validator("cors_origins", mode="before")
     @classmethod
@@ -41,6 +41,17 @@ class Settings(BaseSettings):
     bedrock_claude_opus_model: str = "us.anthropic.claude-opus-4-5-20251101-v1:0"
     bedrock_claude_sonnet_model: str = "us.anthropic.claude-3-5-sonnet-20241022-v2:0"
     bedrock_titan_image_model: str = "amazon.titan-image-generator-v2:0"
+
+    # Ollama Settings
+    ollama_base_url: str = "http://localhost:11434"
+
+    # SDXL WebUI Settings
+    sdxl_webui_url: str = "http://localhost:7860"
+    sdxl_steps: int = 25
+    sdxl_sampler: str = "DPM++ 2M Karras"
+    sdxl_cfg_scale: float = 6.5
+    sdxl_width: int = 900  # Synced with carousel size
+    sdxl_height: int = 1200  # Synced with carousel size
 
     # Generation Limits
     max_text_output_tokens: int = 4000

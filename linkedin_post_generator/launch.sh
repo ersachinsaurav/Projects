@@ -35,7 +35,7 @@ AWS_REGION=us-east-1
 DEBUG=true
 
 # CORS origins (comma-separated)
-CORS_ORIGINS=http://localhost:5173,http://localhost:8000
+CORS_ORIGINS=http://localhost:5173,http://localhost:5170
 EOF
     echo -e "${GREEN}✅ Created .env file. Please edit it with your API keys.${NC}"
     echo ""
@@ -101,14 +101,14 @@ if [ "$FRONTEND_ONLY" = false ]; then
     echo -e "${BLUE}🚀 Starting Backend API...${NC}"
 
     if [ "$DEV_MODE" = true ]; then
-        uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload &
+        uvicorn backend.main:app --host 0.0.0.0 --port 5170 --reload &
         BACKEND_PID=$!
-        echo -e "${GREEN}✅ Backend running on http://localhost:8000 (PID: $BACKEND_PID)${NC}"
-        echo -e "${GREEN}   📚 API Docs: http://localhost:8000/docs${NC}"
+        echo -e "${GREEN}✅ Backend running on http://localhost:5170 (PID: $BACKEND_PID)${NC}"
+        echo -e "${GREEN}   📚 API Docs: http://localhost:5170/docs${NC}"
     else
-        uvicorn backend.main:app --host 0.0.0.0 --port 8000 --workers 4 &
+        uvicorn backend.main:app --host 0.0.0.0 --port 5170 --workers 4 &
         BACKEND_PID=$!
-        echo -e "${GREEN}✅ Backend running on http://localhost:8000 (Production, PID: $BACKEND_PID)${NC}"
+        echo -e "${GREEN}✅ Backend running on http://localhost:5170 (Production, PID: $BACKEND_PID)${NC}"
     fi
 fi
 

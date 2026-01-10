@@ -1,101 +1,232 @@
 /**
  * Unicode Text Formatting Utilities
- * ===================================
- * Functions for converting text to Unicode-styled characters
- * for LinkedIn posts (since LinkedIn doesn't support markdown).
+ * =================================
+ * Optimized, centralized, and extensible Unicode formatting helpers
+ * for platforms like LinkedIn (no markdown support).
  */
 
-/**
- * Convert text to Unicode Mathematical Sans-Serif Bold
- */
-export function toUnicodeBold(text: string): string {
-  const boldUpperStart = 0x1D5D4;
-  const boldLowerStart = 0x1D5EE;
-  const boldDigitStart = 0x1D7EC;
+/* ------------------------------------------------------------------ */
+/* Unicode Metadata (Single Source of Truth)                           */
+/* ------------------------------------------------------------------ */
 
-  return Array.from(text).map(char => {
-    if (char >= 'A' && char <= 'Z') {
-      return String.fromCodePoint(boldUpperStart + (char.charCodeAt(0) - 'A'.charCodeAt(0)));
-    } else if (char >= 'a' && char <= 'z') {
-      return String.fromCodePoint(boldLowerStart + (char.charCodeAt(0) - 'a'.charCodeAt(0)));
-    } else if (char >= '0' && char <= '9') {
-      return String.fromCodePoint(boldDigitStart + (char.charCodeAt(0) - '0'.charCodeAt(0)));
+const UNICODE = {
+  bold: {
+    upper: 0x1d5d4,
+    lower: 0x1d5ee,
+    digit: 0x1d7ec
+  },
+  italic: {
+    upper: 0x1d608,
+    lower: 0x1d622
+  },
+  boldItalic: {
+    upper: 0x1d63c,
+    lower: 0x1d656
+  },
+  underline: '\u0332',
+  strike: '\u0336'
+};
+
+const ASCII = {
+  A: 65,
+  a: 97,
+  zero: 48
+};
+
+/* ------------------------------------------------------------------ */
+/* Generic Unicode Mapper                                              */
+/* ------------------------------------------------------------------ */
+
+type UnicodeRanges = {
+  upper?: number;
+  lower?: number;
+  digit?: number;
+};
+
+function mapUnicode(text: string, ranges: UnicodeRanges): string {
+  return Array.from(text, char => {
+    const code = char.codePointAt(0)!;
+
+    if (ranges.upper && char >= 'A' && char <= 'Z') {
+      return String.fromCodePoint(ranges.upper + code - ASCII.A);
+    }
+    if (ranges.lower && char >= 'a' && char <= 'z') {
+      return String.fromCodePoint(ranges.lower + code - ASCII.a);
+    }
+    if (ranges.digit && char >= '0' && char <= '9') {
+      return String.fromCodePoint(ranges.digit + code - ASCII.zero);
     }
     return char;
   }).join('');
 }
 
-/**
- * Convert text to Unicode Mathematical Sans-Serif Italic
- */
-export function toUnicodeItalic(text: string): string {
-  const italicUpperStart = 0x1D608;
-  const italicLowerStart = 0x1D622;
+/* ------------------------------------------------------------------ */
+/* Style Application Helpers                                           */
+/* ------------------------------------------------------------------ */
 
-  return Array.from(text).map(char => {
-    if (char >= 'A' && char <= 'Z') {
-      return String.fromCodePoint(italicUpperStart + (char.charCodeAt(0) - 'A'.charCodeAt(0)));
-    } else if (char >= 'a' && char <= 'z') {
-      return String.fromCodePoint(italicLowerStart + (char.charCodeAt(0) - 'a'.charCodeAt(0)));
+export const toUnicodeBold = (text: string) =>
+  mapUnicode(text, UNICODE.bold);
+
+export const toUnicodeItalic = (text: string) =>
+  mapUnicode(text, UNICODE.italic);
+
+export const toUnicodeBoldItalic = (text: string) =>
+  mapUnicode(text, { ...UNICODE.boldItalic, digit: UNICODE.bold.digit });
+
+export const toUnicodeUnderline = (text: string) =>
+  Array.from(text, char => char + UNICODE.underline).join('');
+
+export const toUnicodeStrikethrough = (text: string) =>
+  Array.from(text, char => char + UNICODE.strike).join('');
+
+/* ------------------------------------------------------------------ */
+/* Formatting Detection (Single Pass)                                  */
+/* ------------------------------------------------------------------ */
+export function detectFormatting(text: string) {
+  let hasBold = false;
+  let hasItalic = false;
+  let hasBoldItalic = false;
+
+  for (const char of text) {
+    const code = char.codePointAt(0)!;
+
+    if (
+      (code >= UNICODE.boldItalic.upper && code < UNICODE.boldItalic.upper + 26) ||
+      (code >= UNICODE.boldItalic.lower && code < UNICODE.boldItalic.lower + 26)
+    ) {
+      hasBoldItalic = true;
+      hasBold = true;
+      hasItalic = true;
+      continue;
     }
-    return char;
-  }).join('');
+
+    if (
+      (code >= UNICODE.bold.upper && code < UNICODE.bold.upper + 26) ||
+      (code >= UNICODE.bold.lower && code < UNICODE.bold.lower + 26) ||
+      (code >= UNICODE.bold.digit && code < UNICODE.bold.digit + 10)
+    ) {
+      hasBold = true;
+    }
+
+    if (
+      (code >= UNICODE.italic.upper && code < UNICODE.italic.upper + 26) ||
+      (code >= UNICODE.italic.lower && code < UNICODE.italic.lower + 26)
+    ) {
+      hasItalic = true;
+    }
+  }
+
+  return {
+    bold: hasBold,
+    italic: hasItalic,
+    boldItalic: hasBoldItalic,
+    underline: text.includes(UNICODE.underline),
+    strike: text.includes(UNICODE.strike)
+  };
 }
 
-/**
- * Add combining underline character after each character
- */
-export function toUnicodeUnderline(text: string): string {
-  return Array.from(text).map(char => char + '\u0332').join('');
-}
+/* ------------------------------------------------------------------ */
+/* Remove All Unicode Formatting                                       */
+/* ------------------------------------------------------------------ */
 
-/**
- * Add combining strikethrough character after each character
- */
-export function toUnicodeStrikethrough(text: string): string {
-  return Array.from(text).map(char => char + '\u0336').join('');
-}
-
-/**
- * Remove all Unicode formatting from text
- */
 export function removeUnicodeFormatting(text: string): string {
-  // Remove combining characters
-  let result = text.replace(/[\u0332\u0336]/g, '');
+  const stripped = text.replace(
+    new RegExp(`[${UNICODE.underline}${UNICODE.strike}]`, 'g'),
+    ''
+  );
 
-  const boldUpperStart = 0x1D5D4;
-  const boldLowerStart = 0x1D5EE;
-  const boldDigitStart = 0x1D7EC;
-  const italicUpperStart = 0x1D608;
-  const italicLowerStart = 0x1D622;
+  return Array.from(stripped, char => {
+    const code = char.codePointAt(0)!;
 
-  result = Array.from(result).map(char => {
-    const code = char.codePointAt(0) || 0;
+    const decode = (
+      start: number,
+      base: number,
+      count: number
+    ) => (code >= start && code < start + count)
+      ? String.fromCharCode(base + (code - start))
+      : null;
 
-    // Bold uppercase
-    if (code >= boldUpperStart && code < boldUpperStart + 26) {
-      return String.fromCharCode('A'.charCodeAt(0) + (code - boldUpperStart));
-    }
-    // Bold lowercase
-    if (code >= boldLowerStart && code < boldLowerStart + 26) {
-      return String.fromCharCode('a'.charCodeAt(0) + (code - boldLowerStart));
-    }
-    // Bold digits
-    if (code >= boldDigitStart && code < boldDigitStart + 10) {
-      return String.fromCharCode('0'.charCodeAt(0) + (code - boldDigitStart));
-    }
-    // Italic uppercase
-    if (code >= italicUpperStart && code < italicUpperStart + 26) {
-      return String.fromCharCode('A'.charCodeAt(0) + (code - italicUpperStart));
-    }
-    // Italic lowercase
-    if (code >= italicLowerStart && code < italicLowerStart + 26) {
-      return String.fromCharCode('a'.charCodeAt(0) + (code - italicLowerStart));
-    }
-
-    return char;
+    return (
+      decode(UNICODE.boldItalic.upper, ASCII.A, 26) ??
+      decode(UNICODE.boldItalic.lower, ASCII.a, 26) ??
+      decode(UNICODE.bold.upper, ASCII.A, 26) ??
+      decode(UNICODE.bold.lower, ASCII.a, 26) ??
+      decode(UNICODE.bold.digit, ASCII.zero, 10) ??
+      decode(UNICODE.italic.upper, ASCII.A, 26) ??
+      decode(UNICODE.italic.lower, ASCII.a, 26) ??
+      char
+    );
   }).join('');
+}
+
+/* ------------------------------------------------------------------ */
+/* Deterministic Style Reapplication                                   */
+/* ------------------------------------------------------------------ */
+
+type StyleState = {
+  bold?: boolean;
+  italic?: boolean;
+  underline?: boolean;
+  strike?: boolean;
+};
+
+function applyStyles(text: string, styles: StyleState): string {
+  let result = text;
+
+  if (styles.bold && styles.italic) {
+    result = toUnicodeBoldItalic(result);
+  } else if (styles.bold) {
+    result = toUnicodeBold(result);
+  } else if (styles.italic) {
+    result = toUnicodeItalic(result);
+  }
+
+  if (styles.underline) result = toUnicodeUnderline(result);
+  if (styles.strike) result = toUnicodeStrikethrough(result);
 
   return result;
 }
 
+/* ------------------------------------------------------------------ */
+/* Toggle Functions                                                    */
+/* ------------------------------------------------------------------ */
+
+export function toggleBold(text: string): string {
+  const f = detectFormatting(text);
+  return applyStyles(removeUnicodeFormatting(text), {
+    bold: !f.bold,
+    italic: f.italic,
+    underline: f.underline,
+    strike: f.strike
+  });
+}
+
+export function toggleItalic(text: string): string {
+  const f = detectFormatting(text);
+  return applyStyles(removeUnicodeFormatting(text), {
+    bold: f.bold,
+    italic: !f.italic,
+    underline: f.underline,
+    strike: f.strike
+  });
+}
+
+export function toggleUnderline(text: string): string {
+  const f = detectFormatting(text);
+  return applyStyles(removeUnicodeFormatting(text), {
+    bold: f.bold,
+    italic: f.italic,
+    underline: !f.underline,
+    strike: f.strike
+  });
+}
+
+export function toggleStrikethrough(text: string): string {
+  const f = detectFormatting(text);
+  return applyStyles(removeUnicodeFormatting(text), {
+    bold: f.bold,
+    italic: f.italic,
+    underline: f.underline,
+    strike: !f.strike
+  });
+}

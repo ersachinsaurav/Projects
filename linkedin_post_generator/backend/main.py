@@ -5,11 +5,16 @@ Main entry point for the backend API.
 """
 
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
+import logging
 
 from .config import settings
 from .api import router
+
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
@@ -50,6 +55,33 @@ app.add_middleware(
 app.include_router(router, prefix=settings.api_prefix)
 
 
+# Global exception handlers
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    """Handle validation errors with detailed messages."""
+    logger.error(f"Validation error: {exc.errors()}")
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content={
+            "detail": f"Validation error: {exc.errors()}",
+            "errors": exc.errors(),
+        },
+    )
+
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    """Handle all unhandled exceptions."""
+    logger.error(f"Unhandled exception: {str(exc)}", exc_info=True)
+    return JSONResponse(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content={
+            "detail": f"Internal Server Error: {str(exc)}",
+            "type": type(exc).__name__,
+        },
+    )
+
+
 # Root endpoint
 @app.get("/")
 async def root():
@@ -68,7 +100,7 @@ if __name__ == "__main__":
     uvicorn.run(
         "backend.main:app",
         host="0.0.0.0",
-        port=8000,
+        port=5170,
         reload=settings.debug,
     )
 

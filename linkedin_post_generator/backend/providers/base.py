@@ -14,16 +14,24 @@ from abc import ABC, abstractmethod
 from typing import Optional
 from pydantic import BaseModel, Field
 
+from ..utils.constants import (
+    DEFAULT_AUDIENCES,
+    DEFAULT_POST_LENGTH,
+    DEFAULT_TONE,
+    DEFAULT_CTA_STYLE,
+)
+
 
 class TextGenerationRequest(BaseModel):
     """Standardized input for text generation (Phase 1)."""
     idea: str
     post_angle: Optional[str] = None
     draft_post: Optional[str] = None
-    post_length: str = "medium"
-    tone: str = "professional"
-    audience: list[str] = ["founders", "engineers"]
-    cta_style: str = "question"
+    post_length: str = DEFAULT_POST_LENGTH.value
+    tone: str = DEFAULT_TONE.value
+    audience: list[str] = Field(default_factory=lambda: list(DEFAULT_AUDIENCES))
+    cta_style: str = DEFAULT_CTA_STYLE.value
+    session_id: Optional[str] = None  # For logging pipeline steps
 
 
 class ImagePrompt(BaseModel):
@@ -42,6 +50,10 @@ class ImagePrompt(BaseModel):
         default="",
         description="How the layout accommodates the footer"
     )
+    negative_prompt: Optional[str] = Field(
+        default=None,
+        description="Negative prompt for image generation (SDXL-specific)"
+    )
 
 
 class ImageFingerprint(BaseModel):
@@ -51,6 +63,23 @@ class ImageFingerprint(BaseModel):
     composition: str
     lighting: str
     concept_type: str
+
+
+class InfographicSection(BaseModel):
+    """Section within an infographic text structure."""
+    title: str = Field(default="", description="Section title")
+    bullets: list[str] = Field(default_factory=list, description="2-3 bullet points")
+
+
+class InfographicTextStructure(BaseModel):
+    """Structured text for infographic overlays.
+
+    Generated during text generation to avoid a second LLM call for text extraction.
+    """
+    title: str = Field(..., description="Main headline (5-10 words)")
+    subtitle: Optional[str] = Field(None, description="Optional context or problem statement")
+    sections: list[InfographicSection] = Field(default_factory=list)
+    takeaway: Optional[str] = Field(None, description="Strong closing statement")
 
 
 class TextGenerationResponse(BaseModel):
@@ -64,6 +93,7 @@ class TextGenerationResponse(BaseModel):
     - image_strategy: Recommendation (user decides)
     - image_prompts: ALWAYS generated
     - image_fingerprint: Visual consistency
+    - infographic_text: Pre-extracted text structure for infographic overlays
     """
     post_text: str = Field(
         ...,
@@ -98,6 +128,12 @@ class TextGenerationResponse(BaseModel):
         description="Visual consistency parameters"
     )
 
+    # Infographic text structure - pre-extracted to avoid second LLM call
+    infographic_text: Optional[InfographicTextStructure] = Field(
+        default=None,
+        description="Structured text for infographic overlays - reused during image rendering"
+    )
+
     # Metadata
     model_used: str
     tokens_used: Optional[int] = None
@@ -111,8 +147,8 @@ class ImagePromptGenerationRequest(BaseModel):
         description="The finalized post text to ground image prompts in"
     )
     image_count: int = Field(..., ge=1, le=7)
-    tone: str = "professional"
-    audience: list[str] = ["founders", "engineers"]
+    tone: str = DEFAULT_TONE.value
+    audience: list[str] = Field(default_factory=lambda: list(DEFAULT_AUDIENCES))
 
 
 class ImagePromptGenerationResponse(BaseModel):
@@ -136,6 +172,8 @@ class ImageGenerationRequest(BaseModel):
     prompts: list[ImagePrompt]
     fingerprint: ImageFingerprint
     post_text: str  # Context for image generation
+    width: Optional[int] = None  # Optional width override (e.g., 512 for carousel)
+    height: Optional[int] = None  # Optional height override (e.g., 512 for carousel)
 
 
 class GeneratedImage(BaseModel):

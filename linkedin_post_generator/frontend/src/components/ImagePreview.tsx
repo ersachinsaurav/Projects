@@ -20,7 +20,7 @@ import type {
   ImageModelConfig,
   TextGenerationResponse,
 } from '../types';
-import { cn, downloadImage, downloadPDF, formatDuration } from '../lib/utils';
+import { cn, downloadImage, downloadPDF, formatDuration, getFilenameFromContent } from '../lib/utils';
 
 interface ImagePreviewProps {
   textData: TextGenerationResponse | null;
@@ -32,9 +32,11 @@ interface ImagePreviewProps {
   canGenerate: boolean;
 }
 
+// Note: Nova and Titan do NOT support text overlays like SDXL does
 const IMAGE_MODELS = [
-  { provider: 'nova', model: 'nova-canvas', label: 'Nova Canvas', badge: 'Best' },
-  { provider: 'titan', model: 'titan-image-generator-v2', label: 'Titan v2' },
+  { provider: 'sdxl', model: 'sdxl', label: 'SDXL', badge: 'Local', description: 'Supports overlays (recommended)' },
+  { provider: 'nova', model: 'nova-canvas', label: 'Nova Canvas', description: 'Cloud, no overlay support' },
+  { provider: 'titan', model: 'titan-image-generator-v2', label: 'Titan v2', description: 'Cloud, no overlay support' },
 ];
 
 export function ImagePreview({
@@ -49,12 +51,30 @@ export function ImagePreview({
   const [selectedImage, setSelectedImage] = useState<number | null>(null);
 
   const handleDownloadImage = (base64: string, index: number) => {
-    downloadImage(base64, `linkedin-image-${index + 1}.png`);
+    // Use shared utility for consistent filename generation
+    const concept = textData?.image_prompts?.[index]?.concept || imageData?.images[index]?.concept;
+    const filename = getFilenameFromContent({
+      title: textData?.infographic_text?.title,
+      postText: textData?.post_text,
+      concept,
+      defaultName: `linkedin-image-${index + 1}`,
+      extension: 'png',
+    });
+
+    downloadImage(base64, filename);
   };
 
   const handleDownloadPDF = () => {
     if (imageData?.pdf_base64) {
-      downloadPDF(imageData.pdf_base64, 'linkedin-carousel.pdf');
+      let filename = imageData.pdf_title || 'linkedin-carousel.pdf';
+
+      // If filename doesn't have .pdf extension, ensure it's clean
+      if (!filename.endsWith('.pdf')) {
+        filename = filename + '.pdf';
+      }
+
+      // Backend now sends sanitized filenames, so this should be fine
+      downloadPDF(imageData.pdf_base64, filename);
     }
   };
 
@@ -147,24 +167,25 @@ export function ImagePreview({
             </div>
           </div>
 
-          {hasImages && (
+          {(hasImages || imageData?.pdf_base64) && (
             <div className="flex items-center gap-2">
-              {imageData.images.length > 1 && imageData.pdf_base64 && (
+              {imageData?.pdf_base64 && (
                 <button
                   onClick={handleDownloadPDF}
                   className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1"
                 >
-                  <FileText className="w-3 h-3" />
-                  PDF
+                  <div className="w-3 h-3 flex items-center justify-center font-bold text-[10px]">PDF</div>
                 </button>
               )}
-              <button
-                onClick={handleDownloadAll}
-                className="btn-primary text-xs py-1.5 px-3 flex items-center gap-1"
-              >
-                <Download className="w-3 h-3" />
-                All
-              </button>
+              {hasImages && (
+                <button
+                  onClick={handleDownloadAll}
+                  className="btn-primary text-xs py-1.5 px-3 flex items-center gap-1"
+                >
+                  <Download className="w-3 h-3" />
+                  All
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -219,7 +240,7 @@ export function ImagePreview({
                         onClick={() => handleDownloadImage(img.base64_data, idx)}
                         className="p-2 bg-white rounded-full shadow-lg hover:scale-110 transition-transform"
                       >
-                        <Download className="w-4 h-4 text-linkedin-text" />
+                        <ImageIcon className="w-4 h-4 text-linkedin-text" />
                       </button>
                     </div>
                   </div>
@@ -252,18 +273,35 @@ export function ImagePreview({
                   <button
                     key={`${model.provider}-${model.model}`}
                     onClick={() => setImageModel({
-                      provider: model.provider as 'nova' | 'titan',
+                      provider: model.provider as 'nova' | 'titan' | 'sdxl',
                       model: model.model
                     })}
                     className={cn(
-                      'px-3 py-2 text-sm rounded-lg transition-colors text-left',
+                      'px-3 py-2 text-sm rounded-lg transition-colors text-left relative',
                       imageModel.provider === model.provider && imageModel.model === model.model
                         ? 'bg-accent-primary text-white'
                         : 'bg-gray-100 text-linkedin-text hover:bg-gray-200'
                     )}
                   >
                     <div className="font-medium">{model.label}</div>
-                    <div className="text-xs opacity-70 capitalize">{model.provider}</div>
+                    <div className={cn(
+                      'text-xs',
+                      imageModel.provider === model.provider && imageModel.model === model.model
+                        ? 'text-white/70'
+                        : 'text-linkedin-text-secondary'
+                    )}>
+                      {model.description}
+                    </div>
+                    {model.badge && (
+                      <span className={cn(
+                        'absolute top-1 right-1 text-[10px] px-1.5 py-0.5 rounded-full',
+                        imageModel.provider === model.provider && imageModel.model === model.model
+                          ? 'bg-white/20 text-white'
+                          : 'bg-accent-primary/10 text-accent-primary'
+                      )}>
+                        {model.badge}
+                      </span>
+                    )}
                   </button>
                 ))}
               </div>
@@ -335,6 +373,20 @@ export function ImagePreview({
             />
 
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2">
+              {/* PDF Download button */}
+              {imageData.pdf_base64 && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDownloadPDF();
+                  }}
+                  className="px-4 py-2 bg-white rounded-full text-sm font-medium text-linkedin-text flex items-center gap-2 hover:bg-gray-100 transition-colors"
+                >
+                  <div className="w-4 h-4 flex items-center justify-center font-bold text-xs">PDF</div>
+                  PDF
+                </button>
+              )}
+              {/* Image Download button */}
               <button
                 onClick={(e) => {
                   e.stopPropagation();
@@ -342,7 +394,7 @@ export function ImagePreview({
                 }}
                 className="px-4 py-2 bg-white rounded-full text-sm font-medium text-linkedin-text flex items-center gap-2 hover:bg-gray-100 transition-colors"
               >
-                <Download className="w-4 h-4" />
+                <ImageIcon className="w-4 h-4" />
                 Download
               </button>
             </div>

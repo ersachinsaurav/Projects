@@ -10,7 +10,7 @@
  * - Separate regenerate buttons
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
 import {
   Linkedin,
@@ -22,6 +22,8 @@ import {
 } from 'lucide-react';
 import { InputForm } from './components/InputForm';
 import { LinkedInPreview } from './components/LinkedInPreview';
+import { TabLayout, ParentTab, ChildTab } from './components/TabLayout';
+import { PostcardCreator } from './components/PostcardCreator';
 import { useGenerateText } from './hooks/useGenerateText';
 import { useGenerateImages } from './hooks/useGenerateImages';
 import { useGeneratePostCard } from './hooks/useGeneratePostCard';
@@ -35,7 +37,18 @@ import type {
   TextGenerationResponse,
   ImageGenerationResponse,
 } from './types';
-import { DEFAULT_TEXT_MODEL, DEFAULT_IMAGE_MODEL } from './types';
+import {
+  DEFAULT_POST_LENGTH,
+  DEFAULT_TONE,
+  DEFAULT_CTA_STYLE,
+  DEFAULT_AUDIENCES,
+  DEFAULT_GENERATE_POSTCARD,
+  DEFAULT_POSTCARD_THEME,
+  DEFAULT_GENERATE_IMAGE,
+  DEFAULT_GENERATE_CAROUSEL,
+  DEFAULT_IMAGE_MODEL,
+  DEFAULT_TEXT_MODEL,
+} from './lib/defaults';
 import profilePicture from './images/profilePicture.jpeg';
 
 function App() {
@@ -43,21 +56,35 @@ function App() {
   // Removed: tenantId (no multi-tenancy)
   const [sessionId, setSessionId] = useState(() => generateId());
 
+  // Tab navigation
+  const [parentTab, setParentTab] = useState<ParentTab>('ai');
+  const [childTab, setChildTab] = useState<ChildTab>('generate');
+
+  // Manual Postcard tab - independent state
+  const [postcardImage, setPostcardImage] = useState<string | null>(null);
+
   // Form state
   const [idea, setIdea] = useState('');
   const [postAngle, setPostAngle] = useState('');
   const [draftPost, setDraftPost] = useState('');
-  const [postLength, setPostLength] = useState<PostLength>('medium');
-  const [tone, setTone] = useState<Tone>('professional');
-  const [audience, setAudience] = useState<string[]>(['founders', 'engineers', 'leaders', 'developers']);
-  const [ctaStyle, setCtaStyle] = useState<CTAStyle>('question');
+  const [postLength, setPostLength] = useState<PostLength>(DEFAULT_POST_LENGTH);
+  const [tone, setTone] = useState<Tone>(DEFAULT_TONE);
+  const [audience, setAudience] = useState<string[]>([...DEFAULT_AUDIENCES]);
+  const [ctaStyle, setCtaStyle] = useState<CTAStyle>(DEFAULT_CTA_STYLE);
 
   // Model selection
   const [textModel, setTextModel] = useState<TextModelConfig>(DEFAULT_TEXT_MODEL);
   const [imageModel, setImageModel] = useState<ImageModelConfig>(DEFAULT_IMAGE_MODEL);
 
+  // Postcard generation toggle (default ON)
+  const [generatePostcard, setGeneratePostcard] = useState(DEFAULT_GENERATE_POSTCARD);
+  const [postcardTheme, setPostcardTheme] = useState<'dark' | 'light'>(DEFAULT_POSTCARD_THEME);
+
   // Image generation toggle (default OFF)
-  const [generateImage, setGenerateImage] = useState(false);
+  const [generateImage, setGenerateImage] = useState(DEFAULT_GENERATE_IMAGE);
+
+  // Carousel generation toggle (default OFF)
+  const [generateCarousel, setGenerateCarousel] = useState(DEFAULT_GENERATE_CAROUSEL);
 
   // Generated content
   const [textData, setTextData] = useState<TextGenerationResponse | null>(null);
@@ -108,6 +135,36 @@ function App() {
     }
   }, [isDark]);
 
+  // Mutual exclusivity: Only one mode can be active at a time
+  useEffect(() => {
+    if (generatePostcard) {
+      // Postcard ON: Turn off AI Illustration and Carousel
+      if (generateImage) setGenerateImage(false);
+      if (generateCarousel) setGenerateCarousel(false);
+      setImageModel(DEFAULT_IMAGE_MODEL); // Reset image model to default
+    }
+  }, [generatePostcard]);
+
+  useEffect(() => {
+    if (generateImage) {
+      // AI Illustration ON: Turn off Postcard and Carousel
+      if (generatePostcard) setGeneratePostcard(false);
+      if (generateCarousel) setGenerateCarousel(false);
+      setPostcardTheme('dark'); // Reset theme to dark
+      setImageModel(DEFAULT_IMAGE_MODEL); // Reset image model to default
+    }
+  }, [generateImage]);
+
+  useEffect(() => {
+    if (generateCarousel) {
+      // Carousel ON: Turn off Postcard and AI Illustration
+      if (generatePostcard) setGeneratePostcard(false);
+      if (generateImage) setGenerateImage(false);
+      setPostcardTheme('dark'); // Reset theme to dark
+      setImageModel(DEFAULT_IMAGE_MODEL); // Reset image model to default
+    }
+  }, [generateCarousel]);
+
   // Handle text generation
   const handleGenerateText = useCallback(async () => {
     setError(null);
@@ -124,20 +181,22 @@ function App() {
         audience,
         cta_style: ctaStyle,
         text_model: textModel,
-        generate_images: generateImage,  // If False, only generate short_post (saves tokens)
-        image_model: imageModel,  // Only used if generate_images=True
+        generate_images: generateImage || generateCarousel,  // Generate images if AI Illustration OR Carousel is enabled
+        image_model: imageModel,  // Used if generate_images=True or generateCarousel=True
       });
 
       setTextData(result);
       // Trigger auto image generation
       setShouldAutoGenerateImages(true);
     } catch (err) {
+      console.error('Text generation error in handleGenerateText:', err);
       const message = err instanceof Error ? err.message : 'Failed to generate text';
-      setError(message);
+      const detail = (err as any)?.detail || (err as any)?.message || String(err);
+      setError(`${message}${detail && detail !== message ? `: ${detail}` : ''}`);
     }
   }, [
     sessionId, idea, postAngle, draftPost,
-    postLength, tone, audience, ctaStyle, textModel, imageModel, generateImage, textMutation
+    postLength, tone, audience, ctaStyle, textModel, imageModel, generateImage, generateCarousel, textMutation
   ]);
 
   // Handle image generation - uses image_prompts from text generation
@@ -162,6 +221,10 @@ function App() {
         image_prompts: prompts,
         image_fingerprint: fingerprint,
         image_model: imageModel,
+        // Pass carousel flag if generateCarousel is true (independent of generateImage)
+        generate_carousel: generateCarousel,
+        // Note: post_text, short_post, and infographic_text are read from session
+        // (already stored during text generation) - no need to send again
       });
 
       setImageData(result);
@@ -169,10 +232,12 @@ function App() {
       const message = err instanceof Error ? err.message : 'Failed to generate images';
       setError(message);
     }
-  }, [sessionId, imageModel, textData, imageMutation]);
+  }, [sessionId, imageModel, textData, generateCarousel, imageMutation]);
 
   // Generate post card (pure code, no AI - instant!)
-  const handleGeneratePostCard = useCallback(async (theme: 'dark' | 'light') => {
+  const handleGeneratePostCard = useCallback(async (theme?: 'dark' | 'light') => {
+    // Use theme from state if not provided
+    const cardTheme = theme || postcardTheme;
     if (!textData?.post_text) {
       setError('No post content available.');
       return;
@@ -186,7 +251,7 @@ function App() {
         post_text: textData.post_text,
         short_post: textData.short_post || undefined,
         avatar_base64: profilePicBase64 || undefined,
-        theme,
+        theme: cardTheme, // Use cardTheme which falls back to postcardTheme state
         name: 'Sachin Saurav',
         handle: '@ersachinsaurav',
         verified: true,
@@ -198,14 +263,14 @@ function App() {
           id: 1,
           base64_data: result.post_card_base64,
           prompt_used: 'Post card generated with code',
-          concept: `${theme} theme post card`,
+          concept: `${cardTheme} theme post card`,
           format: 'png',
           width: result.width,
           height: result.height,
         }],
         pdf_base64: null,
         session_id: result.session_id,
-        model_used: `PostCardBuilder (${theme})`,
+        model_used: `PostCardBuilder (${cardTheme})`,
         image_count: 1,
         generation_time_ms: result.generation_time_ms ?? undefined,
       });
@@ -218,20 +283,51 @@ function App() {
   // Auto-generate image when text is generated
   // If toggle ON: Generate AI illustration
   // If toggle OFF: Generate Post Card (instant)
+  const lastTextDataIdRef = useRef<string | null>(null);
+  const isGeneratingRef = useRef(false);
+
   useEffect(() => {
-    if (shouldAutoGenerateImages && textData) {
-      if (generateImage) {
-        // AI Illustration mode
-        if (textData.image_prompts?.length > 0) {
-          handleGenerateImages();
-        }
-      } else {
-        // Post Card mode (instant, no AI)
-        handleGeneratePostCard('dark');
+    // Only trigger if shouldAutoGenerateImages is true AND we haven't processed this textData yet
+    if (shouldAutoGenerateImages && textData && !isGeneratingRef.current) {
+      // Use a unique identifier to prevent duplicate calls for the same textData
+      // Include short_post hash to ensure we're using the LATEST data
+      const textDataId = `${textData.session_id}-${textData.post_text?.length}-${textData.short_post?.substring(0, 50)}`;
+
+      if (lastTextDataIdRef.current !== textDataId) {
+        lastTextDataIdRef.current = textDataId; // Mark this textData as processed
+        isGeneratingRef.current = true;
+
+        const generateAsync = async () => {
+          try {
+            if (generateCarousel) {
+              // Carousel mode - needs image prompts
+              if (textData.image_prompts?.length > 0) {
+                await handleGenerateImages();
+              }
+            } else if (generateImage) {
+              // AI Illustration mode
+              if (textData.image_prompts?.length > 0) {
+                await handleGenerateImages();
+              }
+            } else if (generatePostcard) {
+              // Post Card mode (instant, no AI) - use current theme from state
+              await handleGeneratePostCard(postcardTheme);
+            }
+          } finally {
+            isGeneratingRef.current = false;
+          }
+        };
+
+        generateAsync();
+        setShouldAutoGenerateImages(false);
       }
-      setShouldAutoGenerateImages(false);
     }
-  }, [shouldAutoGenerateImages, textData, generateImage, handleGenerateImages, handleGeneratePostCard]);
+
+    // Reset when shouldAutoGenerateImages becomes false
+    if (!shouldAutoGenerateImages) {
+      lastTextDataIdRef.current = null;
+    }
+  }, [shouldAutoGenerateImages, textData, generatePostcard, generateImage, generateCarousel, postcardTheme, handleGenerateImages, handleGeneratePostCard]);
 
   // Generate based on AI recommendation
   // If type is post_card: generate post card
@@ -244,7 +340,7 @@ function App() {
 
     if (recommendedType === 'post_card') {
       // Post card - instant generation
-      await handleGeneratePostCard('dark');
+      await handleGeneratePostCard(postcardTheme);
     } else {
       // AI image type
       // Check if we already have image prompts AND this is the recommended type (not alternative)
@@ -258,6 +354,7 @@ function App() {
             image_prompts: textData.image_prompts,
             image_fingerprint: textData.image_fingerprint,
             image_model: imageModel,
+            // Note: post_text, short_post, and infographic_text are read from session
           });
           setImageData(imageResult);
         } catch (err) {
@@ -291,6 +388,7 @@ function App() {
               image_prompts: result.image_prompts,
               image_fingerprint: result.image_fingerprint,
               image_model: imageModel,
+              // Note: post_text, short_post, and infographic_text are read from session
             });
             setImageData(imageResult);
           }
@@ -342,10 +440,10 @@ function App() {
     setIdea('');
     setPostAngle('');
     setDraftPost('');
-    setPostLength('medium');
-    setTone('professional');
-    setAudience(['founders', 'engineers', 'leaders', 'developers']);
-    setCtaStyle('question');
+    setPostLength(DEFAULT_POST_LENGTH);
+    setTone(DEFAULT_TONE);
+    setAudience([...DEFAULT_AUDIENCES]);
+    setCtaStyle(DEFAULT_CTA_STYLE);
     setTextData(null);
     setImageData(null);
     setError(null);
@@ -363,64 +461,29 @@ function App() {
     }
   }, [textData]);
 
-  // Format draft manually (no API call - just load into editor)
-  // If draftPost has content, use it; otherwise create empty editor
-  const handleFormatDraft = useCallback(() => {
+  // Generate postcard from Manual → Postcard tab (independent, uses its own text)
+  const handleManualPostcardGenerate = useCallback(async (text: string, theme: 'dark' | 'light') => {
     setError(null);
-    setImageData(null); // Clear previous images
 
-    let contentToFormat = draftPost.trim();
-    let hashtags: string[] = [];
-    let postText = '';
+    try {
+      const result = await postCardMutation.mutateAsync({
+        session_id: sessionId,
+        post_text: text,
+        short_post: text.substring(0, 150).trim(),
+        avatar_base64: profilePicBase64 || undefined,
+        theme: theme,
+        name: 'Sachin Saurav',
+        handle: '@ersachinsaurav',
+        verified: true,
+      });
 
-    if (contentToFormat) {
-      // Extract hashtags from draft (lines starting with # or words starting with #)
-      const lines = contentToFormat.split('\n');
-
-      for (const line of lines) {
-        const trimmed = line.trim();
-        // Check if line is all hashtags
-        if (trimmed.startsWith('#') && trimmed.split(/\s+/).every(word => word.startsWith('#'))) {
-          // Extract hashtags from this line
-          const tags = trimmed.match(/#\w+/g) || [];
-          hashtags.push(...tags.map(tag => tag.substring(1))); // Remove # symbol
-        } else if (trimmed) {
-          // Regular content line
-          postText += (postText ? '\n' : '') + line;
-        }
-      }
-
-      // If no hashtags found, try to extract from the end of the text
-      if (hashtags.length === 0) {
-        const hashtagMatch = postText.match(/#\w+/g);
-        if (hashtagMatch) {
-          hashtags.push(...hashtagMatch.map(tag => tag.substring(1)));
-          // Remove hashtags from post text
-          postText = postText.replace(/#\w+/g, '').trim();
-        }
-      }
+      // Store the generated image for the Postcard tab
+      setPostcardImage(result.post_card_base64);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to generate post card';
+      setError(message);
     }
-
-    // Create a minimal TextGenerationResponse for manual editing
-    const manualTextData: TextGenerationResponse = {
-      post_text: postText || contentToFormat || '', // Empty if no draft, so user can paste directly
-      short_post: (postText || contentToFormat || '').substring(0, 150).trim(),
-      hashtags: hashtags.length > 0 ? hashtags : [],
-      image_recommendation: null,
-      image_strategy: null,
-      image_prompts: [],
-      image_fingerprint: null,
-      session_id: sessionId,
-      model_used: 'Manual Format',
-      image_model_used: imageModel.model,
-      tokens_used: 0,
-      generation_time_ms: 0,
-    };
-
-    setTextData(manualTextData);
-    // Don't auto-generate images for manual formatting
-    setShouldAutoGenerateImages(false);
-  }, [draftPost, sessionId, imageModel]);
+  }, [sessionId, profilePicBase64, postCardMutation]);
 
   return (
     <div className={`min-h-screen transition-colors ${isDark ? 'bg-dark-bg' : 'bg-linkedin-background'}`}>
@@ -436,7 +499,7 @@ function App() {
                 LinkedIn Post Generator
               </h1>
               <p className={`text-xs ${isDark ? 'text-dark-text/60' : 'text-linkedin-text-secondary'}`}>
-                Powered by Claude AI
+                Powered by AI
               </p>
             </div>
           </div>
@@ -500,59 +563,202 @@ function App() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Left Column: Input Form */}
-          <div>
-            <InputForm
-              idea={idea}
-              setIdea={setIdea}
-              postAngle={postAngle}
-              setPostAngle={setPostAngle}
-              draftPost={draftPost}
-              setDraftPost={setDraftPost}
-              postLength={postLength}
-              setPostLength={setPostLength}
-              tone={tone}
-              setTone={setTone}
-              audience={audience}
-              setAudience={setAudience}
-              ctaStyle={ctaStyle}
-              setCtaStyle={setCtaStyle}
-              textModel={textModel}
-              setTextModel={setTextModel}
-              imageModel={imageModel}
-              setImageModel={setImageModel}
-              generateImage={generateImage}
-              setGenerateImage={setGenerateImage}
-              onGenerate={handleGenerateText}
-              onFormatDraft={handleFormatDraft}
-              isGenerating={textMutation.isPending}
-            />
-          </div>
+        {/* Tab Navigation - Always at top */}
+        <TabLayout
+          parentTab={parentTab}
+          childTab={childTab}
+          onParentTabChange={setParentTab}
+          onChildTabChange={setChildTab}
+        >
+          {/* AI → Generate Tab */}
+          {parentTab === 'ai' && childTab === 'generate' && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div>
+                <InputForm
+                  idea={idea}
+                  setIdea={setIdea}
+                  postAngle={postAngle}
+                  setPostAngle={setPostAngle}
+                  draftPost={draftPost}
+                  setDraftPost={setDraftPost}
+                  postLength={postLength}
+                  setPostLength={setPostLength}
+                  tone={tone}
+                  setTone={setTone}
+                  audience={audience}
+                  setAudience={setAudience}
+                  ctaStyle={ctaStyle}
+                  setCtaStyle={setCtaStyle}
+                  textModel={textModel}
+                  setTextModel={setTextModel}
+                  imageModel={imageModel}
+                  setImageModel={setImageModel}
+                  generatePostcard={generatePostcard}
+                  setGeneratePostcard={setGeneratePostcard}
+                  postcardTheme={postcardTheme}
+                  setPostcardTheme={setPostcardTheme}
+                  generateImage={generateImage}
+                  setGenerateImage={setGenerateImage}
+                  generateCarousel={generateCarousel}
+                  setGenerateCarousel={setGenerateCarousel}
+                  onGenerate={handleGenerateText}
+                  isGenerating={textMutation.isPending}
+                />
+              </div>
+              <div className="lg:sticky lg:top-24 lg:self-start">
+                <LinkedInPreview
+                  textData={textData}
+                  imageData={imageData}
+                  isTextLoading={textMutation.isPending}
+                  isImageLoading={imageMutation.isPending || postCardMutation.isPending}
+                  onTextChange={handleTextChange}
+                  onRegenerateText={handleRegenerateText}
+                  onRegenerateImages={handleGenerateImages}
+                  onGeneratePostCard={handleGeneratePostCard}
+                  onGenerateWithRecommendation={handleGenerateWithRecommendation}
+                  useAIImages={generateImage || generateCarousel}
+                  usePostcard={generatePostcard}
+                  useCarousel={generateCarousel}
+                  postcardTheme={postcardTheme}
+                />
+              </div>
+            </div>
+          )}
 
-          {/* Right Column: LinkedIn Preview */}
-          <div className="lg:sticky lg:top-24 lg:self-start">
-            <LinkedInPreview
-              textData={textData}
-              imageData={imageData}
-              isTextLoading={textMutation.isPending}
-              isImageLoading={imageMutation.isPending || postCardMutation.isPending}
-              onTextChange={handleTextChange}
-              onRegenerateText={handleRegenerateText}
-              onRegenerateImages={handleGenerateImages}
-              onGeneratePostCard={handleGeneratePostCard}
-              onGenerateWithRecommendation={handleGenerateWithRecommendation}
-              useAIImages={generateImage}
+          {/* Manual → Format Tab - Editor on left, tools on right */}
+          {parentTab === 'manual' && childTab === 'format' && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Left: LinkedIn Preview Editor */}
+              <div>
+                <LinkedInPreview
+                  textData={textData}
+                  imageData={imageData}
+                  isTextLoading={false}
+                  isImageLoading={imageMutation.isPending || postCardMutation.isPending}
+                  onTextChange={handleTextChange}
+                  onRegenerateText={handleRegenerateText}
+                  onRegenerateImages={handleGenerateImages}
+                  onGeneratePostCard={handleGeneratePostCard}
+                  onGenerateWithRecommendation={handleGenerateWithRecommendation}
+                  useAIImages={false}
+                  usePostcard={true}
+                  postcardTheme={postcardTheme}
+                  isManualMode={true}
+                />
+              </div>
+
+              {/* Right: Quick Insert & Tips */}
+              <div className="lg:sticky lg:top-24 lg:self-start space-y-4">
+                {/* Quick Insert Section */}
+                <div className="linkedin-card p-5 space-y-4">
+                  <h3 className="font-semibold text-linkedin-text dark:text-dark-text">Quick Insert</h3>
+
+                  {/* Arrows */}
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium text-linkedin-text-secondary dark:text-dark-text/60 uppercase tracking-wide">Arrows</label>
+                    <div className="flex flex-wrap gap-1.5">
+                      {['→', '➜', '➔', '➞', '⟶', '⇒', '▶', '►', '↳', '⤷', '➡️', '👉'].map((char) => (
+                        <button
+                          key={char}
+                          onClick={() => navigator.clipboard.writeText(char)}
+                          className="w-9 h-9 flex items-center justify-center text-lg bg-gray-100 dark:bg-dark-border hover:bg-linkedin-blue hover:text-white rounded-lg transition-colors"
+                          title={`Copy ${char}`}
+                        >
+                          {char}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Bullets - Different Sizes */}
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium text-linkedin-text-secondary dark:text-dark-text/60 uppercase tracking-wide">Bullets (S → L)</label>
+                    <div className="flex flex-wrap gap-1.5">
+                      {['·', '∙', '•', '●', '◉', '⦿', '○', '◌', '◦', '▪', '▫', '■', '□', '◆', '◇', '★', '☆', '✦', '✧', '✓', '✗', '✔️', '❌'].map((char) => (
+                        <button
+                          key={char}
+                          onClick={() => navigator.clipboard.writeText(char)}
+                          className="w-9 h-9 flex items-center justify-center text-lg bg-gray-100 dark:bg-dark-border hover:bg-linkedin-blue hover:text-white rounded-lg transition-colors"
+                          title={`Copy ${char}`}
+                        >
+                          {char}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Numbers */}
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium text-linkedin-text-secondary dark:text-dark-text/60 uppercase tracking-wide">Numbers</label>
+                    <div className="flex flex-wrap gap-1.5">
+                      {['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨', '⑩', '1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣'].map((char) => (
+                        <button
+                          key={char}
+                          onClick={() => navigator.clipboard.writeText(char)}
+                          className="w-9 h-9 flex items-center justify-center text-lg bg-gray-100 dark:bg-dark-border hover:bg-linkedin-blue hover:text-white rounded-lg transition-colors"
+                          title={`Copy ${char}`}
+                        >
+                          {char}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Emojis */}
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium text-linkedin-text-secondary dark:text-dark-text/60 uppercase tracking-wide">Popular Emojis</label>
+                    <div className="flex flex-wrap gap-1.5">
+                      {['🚀', '💡', '🔥', '✨', '💪', '🎯', '📈', '📉', '🤔', '👇', '⚡', '🙌', '💼', '🎉', '❤️', '👀', '🧠', '💰', '⏰', '🔑'].map((emoji) => (
+                        <button
+                          key={emoji}
+                          onClick={() => navigator.clipboard.writeText(emoji)}
+                          className="w-9 h-9 flex items-center justify-center text-lg bg-gray-100 dark:bg-dark-border hover:bg-gray-200 dark:hover:bg-dark-surface rounded-lg transition-colors"
+                          title={`Copy ${emoji}`}
+                        >
+                          {emoji}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Dividers & Lines */}
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium text-linkedin-text-secondary dark:text-dark-text/60 uppercase tracking-wide">Dividers</label>
+                    <div className="flex flex-wrap gap-1.5">
+                      {['—', '─', '━', '═', '│', '┃', '∣', '|', '⸻', '~', '≈', '∼'].map((char) => (
+                        <button
+                          key={char}
+                          onClick={() => navigator.clipboard.writeText(char)}
+                          className="w-9 h-9 flex items-center justify-center text-lg bg-gray-100 dark:bg-dark-border hover:bg-linkedin-blue hover:text-white rounded-lg transition-colors"
+                          title={`Copy ${char}`}
+                        >
+                          {char}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          )}
+
+          {/* Manual → Postcard Tab - Independent postcard creator */}
+          {parentTab === 'manual' && childTab === 'postcard' && (
+            <PostcardCreator
+              onGeneratePostcard={handleManualPostcardGenerate}
+              generatedImage={postcardImage}
+              isGenerating={postCardMutation.isPending}
             />
-          </div>
-        </div>
+          )}
+        </TabLayout>
       </main>
 
       {/* Footer */}
       <footer className={`border-t mt-12 ${isDark ? 'border-dark-border' : 'border-linkedin-border'}`}>
         <div className="max-w-7xl mx-auto px-4 py-6">
           <div className={`text-center text-sm ${isDark ? 'text-dark-text/60' : 'text-linkedin-text-secondary'}`}>
-            <p>Built with FastAPI + React + Claude AI</p>
+            <p>Built with FastAPI + React + AI</p>
             <p className="mt-1">
               Session: <code className="bg-gray-100 px-2 py-0.5 rounded text-xs">{sessionId.slice(0, 8)}</code>
             </p>

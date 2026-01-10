@@ -50,12 +50,44 @@ async function apiRequest<T>(
 
   if (!response.ok) {
     let detail = 'Unknown error';
+    let errorData: any = null;
+    let rawResponseText = '';
+
     try {
-      const errorData = await response.json();
-      detail = errorData.detail || errorData.message || JSON.stringify(errorData);
-    } catch {
-      detail = response.statusText;
+      // Clone response to read it without consuming the stream
+      const contentType = response.headers.get('content-type') || '';
+      rawResponseText = await response.clone().text();
+
+      console.error(`Raw error response (${contentType}):`, rawResponseText.substring(0, 500));
+
+      if (contentType.includes('application/json') || rawResponseText.trim().startsWith('{') || rawResponseText.trim().startsWith('[')) {
+        try {
+          errorData = JSON.parse(rawResponseText);
+          // FastAPI returns {detail: "message"} format
+          detail = errorData.detail || errorData.message || errorData.error?.message || errorData.error?.detail || JSON.stringify(errorData);
+        } catch (jsonError) {
+          // If JSON parse fails, use text
+          detail = rawResponseText || response.statusText;
+          console.error('JSON parse error:', jsonError, 'Raw text:', rawResponseText.substring(0, 200));
+        }
+      } else {
+        // Plain text response
+        detail = rawResponseText || response.statusText;
+      }
+    } catch (parseError) {
+      // If everything fails, use status text
+      detail = response.statusText || 'Unknown error';
+      console.error('Failed to read error response:', parseError);
     }
+
+    console.error(`API Error ${response.status} for ${endpoint}:`, {
+      detail,
+      errorData,
+      rawResponseText: rawResponseText.substring(0, 500),
+      statusText: response.statusText,
+      contentType: response.headers.get('content-type'),
+      url,
+    });
 
     throw new APIError(
       `API Error: ${response.status}`,

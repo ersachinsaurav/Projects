@@ -3,7 +3,10 @@ Image Processor
 ================
 Post-processing for generated images:
 - Branded footer overlay with social icons
+- Text overlay for any AI-generated background (Nova, Titan, SDXL)
 - PDF merge for multiple images
+
+Supports consistent text overlays across ALL image providers!
 """
 
 import base64
@@ -11,9 +14,7 @@ import io
 from typing import Optional
 
 from PIL import Image, ImageDraw, ImageFont
-from reportlab.lib.pagesizes import letter
-from reportlab.lib.units import inch
-from reportlab.platypus import SimpleDocTemplate, Image as RLImage, Spacer, PageBreak
+from reportlab.pdfgen import canvas
 
 from ..utils.constants import SOCIAL_BRANDING
 
@@ -201,18 +202,18 @@ class ImageProcessor:
         # Footer area with gradient (semi-transparent, not solid)
         for i in range(footer_height):
             y_pos = footer_y + i
-            # Start at 40% opacity and go to 70% at bottom
+            # Start at 30% opacity and go to 70% at bottom
             progress = i / footer_height
-            alpha = int(max_alpha * (0.4 + 0.3 * progress))
+            alpha = int(max_alpha * (0.3 + 0.3 * progress))
             draw.rectangle(
                 [(0, y_pos), (width, y_pos + 1)],
                 fill=(0, 0, 0, alpha),
             )
 
-        # Icon and text configuration
-        icon_size = int(footer_height * 0.45)
-        font_size = int(footer_height * 0.36)
-        small_font_size = int(footer_height * 0.32)
+        # Icon and text configuration - increased font sizes for better readability
+        icon_size = int(footer_height * 0.50)
+        font_size = int(footer_height * 0.44)
+        small_font_size = int(footer_height * 0.40)
 
         # Consistent white color for all elements (slightly transparent for elegance)
         icon_color = (255, 255, 255, 220)
@@ -318,7 +319,9 @@ class ImageProcessor:
         title: Optional[str] = None,
     ) -> str:
         """
-        Merge multiple images into a single PDF.
+        Merge multiple images into a single PDF without margins.
+        Images fill entire pages edge-to-edge using Canvas for precise control.
+        Each page size matches its image dimensions exactly.
 
         Args:
             images_base64: List of base64 encoded images
@@ -327,58 +330,47 @@ class ImageProcessor:
         Returns:
             Base64 encoded PDF
         """
+        if not images_base64:
+            raise ValueError("No images provided for PDF generation")
+
         buffer = io.BytesIO()
 
-        doc = SimpleDocTemplate(
-            buffer,
-            pagesize=letter,
-            rightMargin=0.5 * inch,
-            leftMargin=0.5 * inch,
-            topMargin=0.5 * inch,
-            bottomMargin=0.5 * inch,
-        )
+        # Get first image dimensions for initial page size
+        first_img_data = base64.b64decode(images_base64[0])
+        first_img_buffer = io.BytesIO(first_img_data)
+        first_pil_img = Image.open(first_img_buffer)
+        first_width, first_height = first_pil_img.size
 
-        story = []
-
-        # Calculate image dimensions
-        page_width = letter[0] - inch  # Account for margins
-        page_height = letter[1] - inch
+        # Create PDF canvas with first image dimensions
+        pdf = canvas.Canvas(buffer, pagesize=(first_width, first_height))
 
         for idx, img_b64 in enumerate(images_base64):
             # Decode image
             img_data = base64.b64decode(img_b64)
             img_buffer = io.BytesIO(img_data)
 
-            # Open with PIL to get dimensions
+            # Get image dimensions
             pil_img = Image.open(img_buffer)
             img_width, img_height = pil_img.size
 
-            # Calculate scaled dimensions to fit page
-            aspect = img_width / img_height
+            # Set page size to match this image exactly
+            pdf.setPageSize((img_width, img_height))
 
-            if aspect > (page_width / (page_height * 0.9)):
-                # Width constrained
-                display_width = page_width
-                display_height = display_width / aspect
-            else:
-                # Height constrained
-                display_height = page_height * 0.85
-                display_width = display_height * aspect
-
-            # Reset buffer for ReportLab
+            # Reset buffer for reading
             img_buffer.seek(0)
 
-            # Add image to story
-            rl_image = RLImage(img_buffer, width=display_width, height=display_height)
-            story.append(rl_image)
-            story.append(Spacer(1, 0.25 * inch))
+            # Draw image at (0, 0) covering the entire page
+            # ReportLab uses bottom-left origin, so y=0 is bottom
+            from reportlab.lib.utils import ImageReader
+            img_reader = ImageReader(img_buffer)
+            pdf.drawImage(img_reader, 0, 0, width=img_width, height=img_height)
 
-            # Page break between images (except last)
+            # Create new page for next image (except last)
             if idx < len(images_base64) - 1:
-                story.append(PageBreak())
+                pdf.showPage()
 
-        # Build PDF
-        doc.build(story)
+        # Save PDF
+        pdf.save()
         buffer.seek(0)
 
         return base64.b64encode(buffer.read()).decode("utf-8")
@@ -422,3 +414,43 @@ class ImageProcessor:
                 result["pdf_base64"] = self.merge_to_pdf(pdf_images)
 
         return result
+
+    def add_text_overlay(
+        self,
+        image_base64: str,
+        main_text: str,
+        subtitle: Optional[str] = None,
+        show_footer: bool = True,
+    ) -> str:
+        """
+        Add text overlay to any AI-generated background image.
+
+        This allows consistent text rendering across ALL AI providers:
+        - Nova Canvas
+        - Titan Image Generator
+        - SDXL
+
+        The AI generates simple textured/abstract backgrounds,
+        and we add clean, crisp text on top programmatically.
+
+        Args:
+            image_base64: Base64 encoded AI-generated background
+            main_text: Main text to overlay
+            subtitle: Optional subtitle/attribution
+            show_footer: Whether to add social branding footer
+
+        Returns:
+            Base64 encoded image with text overlay
+        """
+        from .quote_card_builder import QuoteCardBuilder, QuoteCardConfig
+
+        config = QuoteCardConfig(
+            main_text=main_text,
+            subtitle=subtitle or "",
+            show_footer=show_footer,
+            footer_handle=self.branding.get("handle", "@ersachinsaurav"),
+            footer_website=self.branding.get("website", "sachinsaurav.dev"),
+        )
+
+        builder = QuoteCardBuilder()
+        return builder.build_from_ai_background(image_base64, config)

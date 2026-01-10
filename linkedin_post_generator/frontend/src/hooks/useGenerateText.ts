@@ -10,8 +10,12 @@ export function useGenerateText() {
   return useMutation<TextGenerationResponse, APIError, TextGenerationRequest>({
     mutationFn: generateText,
     onError: (error) => {
-      console.error('Text generation failed:', error.detail || error.message);
+      console.error('Text generation failed:', {
+        message: error.message,
+        detail: error.detail,
+        status: error.status,
+        fullError: error,
+      });
     },
   });
 }
-

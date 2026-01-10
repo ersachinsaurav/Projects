@@ -22,6 +22,8 @@ from .schemas import (
     ImageStrategySchema,
     ImagePromptSchema,
     ImageFingerprintSchema,
+    InfographicTextStructureSchema,
+    InfographicSectionSchema,
     ErrorResponse,
 )
 
@@ -57,22 +59,44 @@ async def generate_text(request: TextGenerationRequestSchema):
         provider = get_text_provider(request.text_model.provider)
 
         # Build generation request
+        # Convert enum to string value (handles both enum instances and strings)
+        post_length_str = request.post_length.value if hasattr(request.post_length, 'value') else str(request.post_length)
+        tone_str = request.tone.value if hasattr(request.tone, 'value') else str(request.tone)
+        cta_style_str = request.cta_style.value if hasattr(request.cta_style, 'value') else str(request.cta_style)
+
         gen_request = TextGenerationRequest(
             idea=request.idea,
             post_angle=request.post_angle,
             draft_post=request.draft_post,
-            post_length=request.post_length.value,
-            tone=request.tone.value,
+            post_length=post_length_str,
+            tone=tone_str,
             audience=request.audience,
-            cta_style=request.cta_style.value,
+            cta_style=cta_style_str,
+            session_id=request.session_id,  # For pipeline step logging
         )
 
-        # Use unified prompt - conditionally generate image fields based on generate_images flag
-        image_model_name = "nova" if request.image_model.provider.value == "nova" else "titan"
-        system_prompt = get_linkedin_text_prompt(
-            image_model=image_model_name,
-            generate_images=request.generate_images
-        )
+        # Use appropriate prompt based on text provider
+        # Ollama (Mistral/Llama) needs simpler, more explicit prompts
+        # Bedrock (Claude) can handle complex prompts
+        provider_to_model = {
+            "nova": "nova",
+            "titan": "titan",
+            "sdxl": "sdxl"
+        }
+        image_model_name = provider_to_model.get(request.image_model.provider.value, "nova")
+
+        # Choose prompt based on text provider
+        text_provider_str = request.text_model.provider.value if hasattr(request.text_model.provider, 'value') else str(request.text_model.provider)
+        if text_provider_str == "ollama":
+            # Ollama now uses 3-step pipeline internally
+            # System prompt is for logging only - pipeline uses its own prompts
+            system_prompt = "[OLLAMA PIPELINE - Uses internal 3-step prompts for 95%+ success]"
+        else:
+            # Full prompts for Claude (Bedrock)
+            system_prompt = get_linkedin_text_prompt(
+                image_model=image_model_name,
+                generate_images=request.generate_images
+            )
 
         # Log the prompt being sent
         prompt_logger.log_text_generation(
@@ -84,10 +108,10 @@ async def generate_text(request: TextGenerationRequestSchema):
                 "idea": request.idea,
                 "post_angle": request.post_angle,
                 "draft_post": request.draft_post,
-                "post_length": request.post_length.value,
-                "tone": request.tone.value,
+                "post_length": post_length_str,
+                "tone": tone_str,
                 "audience": request.audience,
-                "cta_style": request.cta_style.value,
+                "cta_style": cta_style_str,
             },
         )
 
@@ -127,7 +151,9 @@ async def generate_text(request: TextGenerationRequestSchema):
             image_strategy=result.image_strategy if result.image_strategy else None,
             image_prompts=[p.model_dump() for p in result.image_prompts] if result.image_prompts else [],
             image_fingerprint=result.image_fingerprint.model_dump() if result.image_fingerprint else None,
-            tone=request.tone.value,
+            # Store infographic_text to avoid second LLM call during rendering
+            infographic_text=result.infographic_text.model_dump() if result.infographic_text else None,
+            tone=tone_str,
             audience=request.audience,
             text_model_used=result.model_used,
         )
@@ -143,6 +169,20 @@ async def generate_text(request: TextGenerationRequestSchema):
         )
 
         # Build response
+        # Convert infographic_text if present
+        infographic_text_schema = None
+        if result.infographic_text:
+            sections = [
+                InfographicSectionSchema(title=s.title, bullets=s.bullets)
+                for s in result.infographic_text.sections
+            ]
+            infographic_text_schema = InfographicTextStructureSchema(
+                title=result.infographic_text.title,
+                subtitle=result.infographic_text.subtitle,
+                sections=sections,
+                takeaway=result.infographic_text.takeaway,
+            )
+
         return TextGenerationResponseSchema(
             post_text=result.post_text,
             short_post=result.short_post,
@@ -153,6 +193,7 @@ async def generate_text(request: TextGenerationRequestSchema):
                 ImagePromptSchema(**p.model_dump()) for p in result.image_prompts
             ] if result.image_prompts else [],
             image_fingerprint=ImageFingerprintSchema(**result.image_fingerprint.model_dump()) if result.image_fingerprint else None,
+            infographic_text=infographic_text_schema,  # Pre-extracted for infographic rendering
             session_id=request.session_id,
             model_used=result.model_used,
             image_model_used=image_model_name if request.generate_images else "none",
@@ -177,6 +218,18 @@ async def generate_text(request: TextGenerationRequestSchema):
             detail=str(e),
         )
     except Exception as e:
+        elapsed_ms = int((time.time() - start_time) * 1000)
+        logger.error(f"Unexpected error in text generation: {str(e)}", exc_info=True)
+
+        usage_logger.log_text_generation(
+            session_id=request.session_id,
+            provider=request.text_model.provider.value if hasattr(request, 'text_model') else "unknown",
+            model=request.text_model.model if hasattr(request, 'text_model') else "unknown",
+            duration_ms=elapsed_ms,
+            success=False,
+            error_message=str(e),
+        )
+
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Unexpected error: {str(e)}",

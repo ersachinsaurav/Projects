@@ -47,6 +47,12 @@ export const IMAGE_TYPE_CONFIG: Record<string, {
   description: string;
   isInstant?: boolean;
 }> = {
+  text_only: {
+    label: 'Text Only',
+    color: 'bg-slate-600',
+    description: 'No image - whitespace reinforces message (best for quiet/reflective posts)',
+    isInstant: true,
+  },
   post_card: {
     label: 'Post Card',
     color: 'bg-gray-600',
@@ -56,7 +62,7 @@ export const IMAGE_TYPE_CONFIG: Record<string, {
   cartoon_narrative: {
     label: 'Cartoon Narrative',
     color: 'bg-purple-600',
-    description: 'Illustrated scene with characters telling a story (AI-generated)',
+    description: 'Illustrated scene with characters (AI-generated, avoid for serious topics)',
   },
   cartoon_abstract: {
     label: 'Cartoon Abstract',
@@ -71,7 +77,7 @@ export const IMAGE_TYPE_CONFIG: Record<string, {
   infographic: {
     label: 'Infographic',
     color: 'bg-orange-600',
-    description: 'Data or process visualization (AI-generated)',
+    description: 'Data or process visualization (AI-generated, carousels flatten pacing)',
   },
 } as const;
 

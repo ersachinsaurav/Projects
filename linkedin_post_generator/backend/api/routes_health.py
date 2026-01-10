@@ -18,9 +18,11 @@ router = APIRouter(tags=["Health & Utility"])
 async def health_check():
     """Check API health and provider availability."""
     providers_status = {
+        "ollama": True,   # Mistral/Llama text models (local)
         "bedrock": True,  # Claude text models
         "nova": True,     # Nova Canvas (recommended for images)
         "titan": True,    # Titan (fallback for images)
+        "sdxl": True,    # SDXL WebUI (local)
     }
 
     return HealthCheckResponse(

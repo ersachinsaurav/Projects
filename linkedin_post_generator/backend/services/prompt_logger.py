@@ -31,8 +31,9 @@ class PromptLogger:
         error: Optional[str] = None,
     ) -> None:
         """Log text generation prompt."""
-        timestamp = datetime.utcnow().isoformat()
-        date_str = datetime.utcnow().strftime("%Y-%m-%d")
+        # Use local time to match usage_logger
+        timestamp = datetime.now().isoformat()
+        date_str = datetime.now().strftime("%Y-%m-%d")
 
         log_entry = {
             "timestamp": timestamp,
@@ -43,6 +44,48 @@ class PromptLogger:
             "system_prompt": system_prompt,
             "user_input": user_input,
             "response": response,
+            "error": error,
+        }
+
+        log_file = self.log_dir / f"text_prompts_{date_str}.jsonl"
+        with open(log_file, "a", encoding="utf-8") as f:
+            f.write(json.dumps(log_entry, ensure_ascii=False) + "\n")
+
+    def log_pipeline_step(
+        self,
+        session_id: str,
+        provider: str,
+        model: str,
+        step_number: int,
+        step_name: str,
+        system_prompt: str,
+        user_prompt: str,
+        output: Optional[str] = None,
+        tokens_used: Optional[int] = None,
+        error: Optional[str] = None,
+    ) -> None:
+        """
+        Log individual pipeline step for Ollama 3-step pipeline.
+
+        This captures the ACTUAL prompts being sent to the model,
+        not just placeholders.
+        """
+        # Use local time to match usage_logger
+        timestamp = datetime.now().isoformat()
+        date_str = datetime.now().strftime("%Y-%m-%d")
+
+        log_entry = {
+            "timestamp": timestamp,
+            "type": "pipeline_step",
+            "session_id": session_id,
+            "provider": provider,
+            "model": model,
+            "step_number": step_number,
+            "step_name": step_name,
+            "system_prompt": system_prompt,
+            "user_prompt": user_prompt,
+            "output": output,
+            "tokens_used": tokens_used,
             "error": error,
         }
 
@@ -61,8 +104,9 @@ class PromptLogger:
         error: Optional[str] = None,
     ) -> None:
         """Log image generation prompt."""
-        timestamp = datetime.utcnow().isoformat()
-        date_str = datetime.utcnow().strftime("%Y-%m-%d")
+        # Use local time to match usage_logger
+        timestamp = datetime.now().isoformat()
+        date_str = datetime.now().strftime("%Y-%m-%d")
 
         log_entry = {
             "timestamp": timestamp,

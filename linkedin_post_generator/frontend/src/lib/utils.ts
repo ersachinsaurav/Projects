@@ -114,6 +114,62 @@ export function downloadPDF(base64Data: string, filename: string): void {
 }
 
 /**
+ * Sanitize text for use as filename (SEO-friendly kebab-case)
+ * Removes special characters, replaces spaces with hyphens, lowercases
+ */
+export function sanitizeFilename(text: string, fallback: string = 'untitled'): string {
+  if (!text || !text.trim()) return fallback;
+
+  const sanitized = text
+    .trim()
+    .replace(/[^\w\s]/g, '') // Remove all special chars, keep only alphanumeric and spaces
+    .replace(/\s+/g, '-') // Replace spaces with hyphens (SEO best practice)
+    .toLowerCase(); // Lowercase for consistency
+
+  return sanitized || fallback;
+}
+
+/**
+ * Get filename from text content with priority order
+ * Priority: title > firstLine of text > concept > defaultName
+ */
+export function getFilenameFromContent(
+  options: {
+    title?: string;
+    postText?: string;
+    concept?: string;
+    defaultName?: string;
+    extension?: string;
+  }
+): string {
+  const { title, postText, concept, defaultName = 'download', extension = 'png' } = options;
+
+  let textToUse = '';
+
+  // Priority 1: Use title if available
+  if (title?.trim()) {
+    textToUse = title;
+  }
+  // Priority 2: Use first line of postText
+  else if (postText?.trim()) {
+    const firstLine = postText.split('\n').find(line => line.trim()) || '';
+    if (firstLine.trim()) {
+      textToUse = firstLine;
+    }
+  }
+  // Priority 3: Use concept
+  if (!textToUse && concept?.trim()) {
+    textToUse = concept;
+  }
+
+  if (textToUse) {
+    return `${sanitizeFilename(textToUse, defaultName)}.${extension}`;
+  }
+
+  return `${defaultName}.${extension}`;
+}
+
+/**
  * Copy text to clipboard
  */
 export async function copyToClipboard(text: string): Promise<boolean> {

@@ -1,7 +1,7 @@
 /**
  * TypeScript type definitions for LinkedIn Post Generator
  *
- * Claude-only models with single-phase generation.
+ * Supports Ollama (Mistral/Llama) and Bedrock (Claude) models with single-phase generation.
  * Simplified single-user architecture (no multi-tenancy).
  */
 
@@ -12,8 +12,8 @@
 export type PostLength = 'short' | 'medium' | 'long';
 export type Tone = 'professional' | 'opinionated' | 'reflective';
 export type CTAStyle = 'question' | 'statement' | 'none';
-export type TextProvider = 'bedrock';  // Claude only
-export type ImageProvider = 'nova' | 'titan';  // Nova Canvas (recommended) or Titan
+export type TextProvider = 'ollama' | 'bedrock';  // Ollama (Mistral/Llama/Qwen) or Bedrock (Claude)
+export type ImageProvider = 'nova' | 'titan' | 'sdxl';  // Nova Canvas (recommended), Titan, or SDXL
 
 // =============================================================================
 // MODEL CONFIGS
@@ -53,6 +53,7 @@ export interface ImagePrompt {
   prompt: string;
   style_notes: string;
   composition_note: string;
+  negative_prompt?: string | null;  // SDXL-specific: things to avoid in generation
 }
 
 export interface ImageFingerprint {
@@ -76,6 +77,18 @@ export interface ImageRecommendation {
   style_notes: string;
 }
 
+export interface InfographicSection {
+  title: string;
+  bullets: string[];
+}
+
+export interface InfographicTextStructure {
+  title: string;
+  subtitle?: string | null;
+  sections: InfographicSection[];
+  takeaway?: string | null;
+}
+
 export interface TextGenerationResponse {
   post_text: string;
   short_post: string;  // REQUIRED - Punchy summary for post cards
@@ -84,6 +97,7 @@ export interface TextGenerationResponse {
   image_strategy: ImageStrategy | null;  // Only if generate_images=True
   image_prompts: ImagePrompt[];  // Only if generate_images=True
   image_fingerprint: ImageFingerprint | null;  // Only if generate_images=True
+  infographic_text?: InfographicTextStructure | null;  // Pre-extracted text for infographic overlays
   session_id: string;
   model_used: string;
   image_model_used: string;  // Which model prompts were generated for (nova or titan)
@@ -100,6 +114,9 @@ export interface ImageGenerationRequest {
   image_prompts?: ImagePrompt[] | null;
   image_fingerprint?: ImageFingerprint | null;
   image_model: ImageModelConfig;
+  generate_carousel?: boolean;  // Generate carousel: AI cover + post card sections (default: false)
+  // Note: post_text, short_post, and infographic_text are read from session
+  // (stored during text generation) to avoid duplication
 }
 
 export interface GeneratedImage {
@@ -115,6 +132,7 @@ export interface GeneratedImage {
 export interface ImageGenerationResponse {
   images: GeneratedImage[];
   pdf_base64?: string | null;
+  pdf_title?: string | null;  // Title for PDF filename (for carousels)
   session_id: string;
   model_used: string;
   image_count: number;
@@ -206,54 +224,41 @@ export interface AppState {
 // =============================================================================
 
 export const TEXT_MODELS: Record<TextProvider, string[]> = {
+  ollama: [
+    'qwen2.5:7b',          // (Local) Analytical & reasoning
+    'mistral:7b',          // (Local) Professional content
+    'llama3:8b',           // (Local) Creative content
+  ],
   bedrock: [
-    'claude-opus-4.5',     // Default, best quality
+    'claude-opus-4.5',     // Default, best quality (recommended)
     'claude-opus-4.1',
-    'claude-opus-4',
     'claude-sonnet-4.5',
-    'claude-sonnet-4',
     'claude-haiku-4.5',    // Fast, cheap
   ],
 };
 
 export const IMAGE_MODELS: Record<ImageProvider, string[]> = {
-  nova: ['nova-canvas'],  // Recommended, higher quality
-  titan: ['titan-image-generator-v2'],  // Fallback
+  sdxl: ['sdxl'],  // (Local) Default, supports overlays
+  nova: ['nova-canvas'],  // Cloud, no overlay support
+  titan: ['titan-image-generator-v2'],  // Cloud, no overlay support
 };
 
-export const DEFAULT_TEXT_MODEL: TextModelConfig = {
-  provider: 'bedrock',
-  model: 'claude-opus-4.5',
-};
+// DEPRECATED: Use '../lib/defaults' instead
+// These are kept for backward compatibility but will be removed in future versions
+import {
+  DEFAULT_TEXT_MODEL as DEFAULT_TEXT_MODEL_FROM_DEFAULTS,
+  DEFAULT_IMAGE_MODEL as DEFAULT_IMAGE_MODEL_FROM_DEFAULTS,
+} from '../lib/defaults';
 
-export const DEFAULT_IMAGE_MODEL: ImageModelConfig = {
-  provider: 'nova',
-  model: 'nova-canvas',
-};
+export const DEFAULT_TEXT_MODEL = DEFAULT_TEXT_MODEL_FROM_DEFAULTS;
+export const DEFAULT_IMAGE_MODEL = DEFAULT_IMAGE_MODEL_FROM_DEFAULTS;
 
-// Default audiences (most common LinkedIn targets)
-export const AUDIENCE_OPTIONS = [
-  'founders',
-  'engineers',
-  'leaders',
-  'developers',
-];
+// DEPRECATED: Use '../lib/defaults' instead
+// These are kept for backward compatibility but will be removed in future versions
+import { DEFAULT_AUDIENCES, ALL_AUDIENCES } from '../lib/defaults';
 
-// All available audience options
-export const ALL_AUDIENCE_OPTIONS = [
-  'founders',
-  'engineers',
-  'leaders',
-  'developers',
-  'marketers',
-  'designers',
-  'product managers',
-  'data scientists',
-  'executives',
-  'entrepreneurs',
-  'investors',
-  'consultants',
-];
+export const AUDIENCE_OPTIONS = [...DEFAULT_AUDIENCES] as string[];
+export const ALL_AUDIENCE_OPTIONS = [...ALL_AUDIENCES] as string[];
 
 export const POST_LENGTH_OPTIONS: { value: PostLength; label: string; description: string }[] = [
   { value: 'short', label: 'Short', description: '100-200 chars, punchy' },
