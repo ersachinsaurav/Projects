@@ -211,7 +211,7 @@ class TextModelProvider(ABC):
     @property
     @abstractmethod
     def provider_name(self) -> str:
-        """Return the provider name (e.g., 'openai', 'bedrock')."""
+        """Return the provider name (e.g., 'bedrock', 'ollama')."""
         pass
 
     @property
@@ -290,7 +290,7 @@ class ImageModelProvider(ABC):
     @property
     @abstractmethod
     def provider_name(self) -> str:
-        """Return the provider name (e.g., 'openai', 'titan')."""
+        """Return the provider name (e.g., 'nova', 'titan', 'sdxl')."""
         pass
 
     @property

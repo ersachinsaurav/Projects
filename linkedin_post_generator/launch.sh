@@ -21,24 +21,33 @@ cd "$SCRIPT_DIR"
 
 # Check for .env file
 if [ ! -f .env ]; then
-    echo -e "${YELLOW}⚠️  No .env file found. Creating from template...${NC}"
-    cat > .env << 'EOF'
+    echo -e "${YELLOW}⚠️  No .env file found. Creating from env.example...${NC}"
+    if [ -f env.example ]; then
+        cp env.example .env
+        echo -e "${GREEN}✅ Created .env from env.example${NC}"
+        echo -e "${YELLOW}   Please edit .env with your settings${NC}"
+    else
+        cat > .env << 'EOF'
 # LinkedIn Post Generator Configuration
+# See env.example for all options
 
-# OpenAI (required for OpenAI models)
-OPENAI_API_KEY=your-openai-api-key-here
+# Branding
+BRAND_NAME=Your Name
+BRAND_HANDLE=@yourusername
 
-# AWS (uses default credentials from ~/.aws/credentials or IAM role)
+# Frontend branding (VITE_ prefix required)
+VITE_BRAND_NAME=Your Name
+VITE_BRAND_HANDLE=@yourusername
+VITE_BRAND_TITLE=Your Professional Title
+VITE_BRAND_VERIFIED=false
+
+# AWS (uses ~/.aws/credentials or IAM role)
 AWS_REGION=us-east-1
 
 # Debug mode
 DEBUG=true
-
-# CORS origins (comma-separated)
-CORS_ORIGINS=http://localhost:5173,http://localhost:5170
 EOF
-    echo -e "${GREEN}✅ Created .env file. Please edit it with your API keys.${NC}"
-    echo ""
+    fi
 fi
 
 # Function to check if command exists

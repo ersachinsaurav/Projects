@@ -10,6 +10,8 @@ CRITICAL:
 - Strategic emoji usage is ALLOWED
 """
 
+from ..utils.constants import get_branding_hashtag
+
 
 def get_linkedin_text_prompt(image_model: str = "nova", generate_images: bool = True) -> str:
     """
@@ -20,6 +22,8 @@ def get_linkedin_text_prompt(image_model: str = "nova", generate_images: bool = 
     - The user MAY provide only an idea and angle.
     - Draft posts are OPTIONAL and should be treated as raw material, not final content.
     """
+    # Get branding hashtag for use in prompts
+    branding_hashtag = get_branding_hashtag()
 
     if generate_images:
         if image_model.lower() == "sdxl":
@@ -149,7 +153,7 @@ Example format:
         output_format = f'''{{
   "post_text": "The complete LinkedIn post with Unicode bold and strategic emojis. No hashtags in body.",
   "short_post": "DISTILLED ESSENCE with sharp rhythm (5-8 SHORT punchy lines, max 400 chars). NOT a summary. Open with ACTION. Use REPETITION for rhythm. Split insight into 2 short lines. PLAIN TEXT ONLY. No emojis.",
-  "hashtags": ["#DomainTag1", "#DomainTag2", "#DomainTag3", "#PersonalTag", "#PersonalBrandTag"],
+  "hashtags": ["#DomainTag1", "#DomainTag2", "#DomainTag3", "#PersonalBrandTag"],
   {image_recommendation_format},
   "image_strategy": {{
     "image_count": 1,
@@ -188,8 +192,8 @@ Example format:
     WRONG: "I almost ignored it",  |  RIGHT: "I almost ignored it,"
 11. ALWAYS generate at least 1 image prompt
 12. Return ONLY valid JSON
-13. Hashtags: Generate 3-4 content-relevant hashtags, THEN add #SachinSaurav at the end (4-5 total). FEWER = more professional.
-14. Use #SachinSaurav only (single branding tag). #BySachinSaurav is retired.
+13. Hashtags: Generate 3-4 content-relevant hashtags, THEN add {branding_hashtag} at the end (4-5 total). FEWER = more professional.
+14. ONLY use {branding_hashtag} as the personal branding tag. DO NOT invent or add any other personal branding hashtags.
 15. AVOID AI-heavy hashtags (#AITools, #AI, #GPT, #LLM) - they attract tool-chasers, not engineers. Use #SoftwareEngineering, #CodeReview instead.
 16. short_post MUST capture the REALIZATION moment, not be a summary. Use CONFIDENT language (no "just").
 17. ALL JSON keys shown above are REQUIRED
@@ -248,7 +252,7 @@ POST CARDS are better because:
         output_format = f'''{{
   "post_text": "The complete LinkedIn post with Unicode bold and strategic emojis. No hashtags in body.",
   "short_post": "DISTILLED ESSENCE with sharp rhythm (5-8 SHORT punchy lines, max 400 chars). Open with ACTION. Use REPETITION. Split insight into 2 short lines. PLAIN TEXT ONLY.",
-  "hashtags": ["#DomainTag1", "#DomainTag2", "#DomainTag3", "#PersonalTag", "#PersonalBrandTag"],
+  "hashtags": ["#DomainTag1", "#DomainTag2", "#DomainTag3", "#PersonalBrandTag"],
   {image_recommendation_format}
 }}'''
         critical_rules = '''## CRITICAL RULES (NO EXCEPTIONS - VIOLATIONS WILL BE REJECTED)
@@ -265,8 +269,8 @@ POST CARDS are better because:
     WRONG: "I almost ignored it",  |  RIGHT: "I almost ignored it,"
 11. DO NOT generate image prompts (but DO generate image_recommendation)
 12. Return ONLY valid JSON
-13. Hashtags: Generate 3-4 content-relevant hashtags, THEN add #SachinSaurav at the end (4-5 total). FEWER = more professional.
-14. Use #SachinSaurav only (single branding tag). #BySachinSaurav is retired.
+13. Hashtags: Generate 3-4 content-relevant hashtags, THEN add {branding_hashtag} at the end (4-5 total). FEWER = more professional.
+14. ONLY use {branding_hashtag} as the personal branding tag. DO NOT invent or add any other personal branding hashtags.
 15. AVOID AI-heavy hashtags (#AITools, #AI, #GPT, #LLM) - they attract tool-chasers, not engineers. Use #SoftwareEngineering, #CodeReview instead.
 16. short_post MUST capture the REALIZATION moment, not be a summary. Use CONFIDENT language (no "just").
 17. image_recommendation is REQUIRED - use chain-of-thought reasoning. Consider text_only for quiet/reflective posts.

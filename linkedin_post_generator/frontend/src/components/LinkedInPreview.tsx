@@ -45,7 +45,17 @@ import {
 } from '../lib/unicode';
 import { PROFILE_CONFIG, LINKEDIN_LIMITS, EDITOR_CONFIG } from '../lib/constants';
 import { RecommendationSection } from './RecommendationSection';
-import profilePicture from '../images/profilePicture.jpeg';
+
+// =============================================================================
+// PROFILE PICTURE CUSTOMIZATION
+// =============================================================================
+// To use your own profile picture:
+// 1. Add your photo as 'profilePicture.jpeg' in src/images/
+// 2. Comment out the placeholder import below
+// 3. Uncomment the custom import
+//
+// import profilePicture from '../images/profilePicture.jpeg';
+import profilePicture from '../images/placeholder-avatar.svg';
 
 interface LinkedInPreviewProps {
   textData: TextGenerationResponse | null;

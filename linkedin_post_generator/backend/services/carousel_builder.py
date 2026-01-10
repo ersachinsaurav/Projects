@@ -18,7 +18,7 @@ from typing import Optional, List, Dict
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 
 from .post_card_builder import PostCardBuilder, PostCardStyle
-from ..utils.constants import SOCIAL_BRANDING
+from ..utils.constants import get_social_branding
 
 logger = logging.getLogger(__name__)
 
@@ -52,10 +52,10 @@ class CarouselBuilder:
 
     def __init__(self, branding: Optional[dict] = None):
         """Initialize carousel builder."""
-        self.branding = branding or SOCIAL_BRANDING
+        self.branding = branding or get_social_branding()
         # Extract name from handle or use default
-        handle = self.branding.get('handle', '@ersachinsaurav')
-        name = self.branding.get('name', 'Sachin Saurav')
+        handle = self.branding.get('handle', '@yourusername')
+        name = self.branding.get('name', 'Your Name')
         # Post cards use same dimensions as carousel (768x512)
         # Background color will be set from cover image in build_carousel
         self.post_card_builder = PostCardBuilder(PostCardStyle(
@@ -333,8 +333,8 @@ class CarouselBuilder:
     def _draw_compact_footer(self, draw: ImageDraw.Draw, y_start: int, height: int):
         """Draw a compact footer with icons for carousel images (optimized for 512 width)."""
         # Get branding info
-        handle_text = self.branding.get('handle', '@ersachinsaurav')
-        website_text = self.branding.get('website', 'sachinsaurav.dev')
+        handle_text = self.branding.get('handle', '@yourusername')
+        website_text = self.branding.get('website', 'yourwebsite.com')
 
         # Font sizes - 16px to match icon size visually
         font_size = 16
@@ -637,8 +637,8 @@ class CarouselBuilder:
         logger.info(f"Extracted background color from cover: RGB{extracted_bg_color}")
 
         # Update post card builder style with extracted color
-        handle = self.branding.get('handle', '@ersachinsaurav')
-        name = self.branding.get('name', 'Sachin Saurav')
+        handle = self.branding.get('handle', '@yourusername')
+        name = self.branding.get('name', 'Your Name')
         self.post_card_builder.style = PostCardStyle(
             width=CAROUSEL_WIDTH,
             height=CAROUSEL_HEIGHT,

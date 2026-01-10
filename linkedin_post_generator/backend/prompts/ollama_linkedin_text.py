@@ -16,6 +16,8 @@ Based on production logs analysis showing:
 - Hashtag misuse
 """
 
+from ..utils.constants import get_branding_hashtag
+
 
 # =============================================================================
 # SHARED PROMPT SECTIONS (DRY - Don't Repeat Yourself)
@@ -216,8 +218,8 @@ def _get_hashtags_rules() -> str:
     """Hashtag rules."""
     return """=== HASHTAGS RULES (CRITICAL) ===
 - Generate 3-4 content hashtags + 1 branding hashtag (4-5 total)
-- Add #SachinSaurav at the END of the array (single branding tag only)
-- Do NOT use #BySachinSaurav (retired)
+- Add {branding_hashtag} at the END of the array (this is the ONLY personal branding tag allowed)
+- DO NOT invent or add any other personal branding hashtags.
 - Content hashtags must be relevant to the specific topic
 - NEVER put hashtags inside post_text (they go ONLY in the hashtags array)
 - NEVER duplicate hashtags between post_text and hashtags array
@@ -232,8 +234,8 @@ AVOID AI-HEAVY HASHTAGS (attract wrong audience):
   Use: #SoftwareEngineering, #CodeReview, #EngineeringCulture
 
 HASHTAG EXAMPLES:
-  For long posts: #SoftwareEngineering, #ProductDevelopment, #EngineeringCulture, #SachinSaurav
-  For short posts: #SoftwareEngineering, #SachinSaurav"""
+  For long posts: #SoftwareEngineering, #ProductDevelopment, #EngineeringCulture, {branding_hashtag}
+  For short posts: #SoftwareEngineering, {branding_hashtag}"""
 
 
 def _get_image_blocks(generate_images: bool = True) -> str:
@@ -300,12 +302,13 @@ def get_mistral_linkedin_text_prompt(image_model: str = "nova", generate_images:
     Model-specific: Mistral 7B optimizes for "minimum plausible completion".
     Uses shared prompt sections with Mistral-specific intro and output format.
     """
+    branding_hashtag = get_branding_hashtag()
     image_blocks = _get_image_blocks(generate_images)
 
     output_format = f'''{{
   "post_text": "...",
   "short_post": "...",
-  "hashtags": ["#Tag1", "#Tag2", "#Tag3", "#Tag4", "#SachinSaurav"],
+  "hashtags": ["#Tag1", "#Tag2", "#Tag3", "#Tag4", "{branding_hashtag}"],
   {image_blocks}
 }}'''
 
@@ -362,12 +365,13 @@ def get_llama_linkedin_text_prompt(image_model: str = "nova", generate_images: b
     Model-specific: Llama responds better to prohibitions and explicit examples.
     Uses shared prompt sections with Llama-specific additions.
     """
+    branding_hashtag = get_branding_hashtag()
     image_blocks = _get_image_blocks(generate_images)
 
     output_format = f'''{{
   "post_text": "...",
   "short_post": "...",
-  "hashtags": ["#Tag1", "#Tag2", "#Tag3", "#Tag4", "#SachinSaurav"],
+  "hashtags": ["#Tag1", "#Tag2", "#Tag3", "#Tag4", "{branding_hashtag}"],
   {image_blocks}
 }}'''
 
@@ -446,12 +450,13 @@ def get_qwen_linkedin_text_prompt(image_model: str = "nova", generate_images: bo
     Model-specific: Qwen follows structured instructions well.
     Uses ======== separators and more explicit author context.
     """
+    branding_hashtag = get_branding_hashtag()
     image_blocks = _get_image_blocks(generate_images)
 
     output_format = f'''{{
   "post_text": "...",
   "short_post": "...",
-  "hashtags": ["#Tag1", "#Tag2", "#Tag3", "#Tag4", "#SachinSaurav"],
+  "hashtags": ["#Tag1", "#Tag2", "#Tag3", "#Tag4", "{branding_hashtag}"],
   {image_blocks}
 }}'''
 
@@ -611,8 +616,7 @@ Users notice their work getting done."""
 HASHTAG RULES (CRITICAL)
 ========================
 - Generate 3-4 content hashtags + 1 branding hashtag (4-5 total)
-- Add #SachinSaurav at the END of the array (single branding tag only)
-- Do NOT use #BySachinSaurav (retired)
+- Add {branding_hashtag} at the END of the array (single branding tag only)
 - Content hashtags must be relevant and professional
 - NEVER put hashtags inside post_text (hashtags array ONLY)
 - NEVER duplicate hashtags between post_text and hashtags array
@@ -626,8 +630,8 @@ AVOID AI-HEAVY HASHTAGS (attract wrong audience):
   Use: #SoftwareEngineering, #CodeReview, #EngineeringCulture
 
 HASHTAG EXAMPLES:
-  For long posts: #SoftwareEngineering, #ProductDevelopment, #EngineeringCulture, #SachinSaurav
-  For short posts: #SoftwareEngineering, #SachinSaurav"""
+  For long posts: #SoftwareEngineering, #ProductDevelopment, #EngineeringCulture, {branding_hashtag}
+  For short posts: #SoftwareEngineering, {branding_hashtag}"""
 
     # Qwen-specific output
     output_section = f"""========================

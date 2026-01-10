@@ -258,8 +258,9 @@ def get_step3_user_prompt(step2_output: str, author_hashtags: list[str] = None) 
     - Can re-run Step 3 independently if it fails
     - NO GENERIC PLACEHOLDERS - force model to extract from content
     """
+    from ..utils.constants import get_branding_hashtag
     if author_hashtags is None:
-        author_hashtags = ["#SachinSaurav"]  # Single branding tag only, #BySachinSaurav is retired
+        author_hashtags = [get_branding_hashtag()]  # Single branding tag only
 
     hashtags_str = ", ".join(f'"{h}"' for h in author_hashtags)
     hashtags_list_example = ", ".join(f'"{h}"' for h in author_hashtags)
@@ -274,7 +275,7 @@ POST TO CONVERT:
 INSTRUCTIONS:
 1. "post_text": Copy the post above. Add \\n\\n between paragraphs. Add 1-2 emojis MAXIMUM (placed naturally, not at every paragraph start).
 2. "short_post": DISTILL the post into 5-8 SHORT punchy lines (3-10 words each). Open with ACTION. Use REPETITION for rhythm. SPLIT the insight into 2 short lines. NO emojis. NO hashtags. Use \\n between lines. Use CONFIDENT language (avoid "just").
-3. "hashtags": Create 3-4 content hashtags from the post's topics, THEN add {hashtags_str} at the end (4-5 total). FEWER hashtags = more professional.
+3. "hashtags": Create 3-4 content hashtags from the post's topics, THEN add {hashtags_str} at the end (4-5 total). ONLY use {hashtags_str} as the personal branding tag - DO NOT add any other personal branding hashtags like #YogevCodes, #CodeWithMJ, etc.
 4. "image_recommendation.reasoning": Write 1 sentence explaining why post_card fits THIS specific post's topic.
 5. "image_prompts[0].concept": Describe the main visual idea from THIS post (not generic).
 6. "image_prompts[0].prompt": Write a detailed image prompt based on the post's actual content.
@@ -523,8 +524,9 @@ def validate_step3_output(output: str, author_hashtags: list[str] = None) -> tup
         return False, errors
 
     # Validate hashtags
+    from ..utils.constants import get_branding_hashtag
     if author_hashtags is None:
-        author_hashtags = ["#SachinSaurav"]  # Single branding tag only, #BySachinSaurav is retired
+        author_hashtags = [get_branding_hashtag()]  # Single branding tag only
 
     hashtags = data.get("hashtags", [])
     if len(hashtags) < 4:

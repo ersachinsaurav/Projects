@@ -23,8 +23,8 @@ async def lifespan(app: FastAPI):
     # Startup
     print(f"🚀 Starting {settings.app_name} v{settings.app_version}")
     print(f"   Debug mode: {settings.debug}")
-    print(f"   OpenAI configured: {settings.openai_api_key is not None}")
     print(f"   AWS Region: {settings.aws_region}")
+    print(f"   Ollama URL: {settings.ollama_base_url}")
 
     yield
 

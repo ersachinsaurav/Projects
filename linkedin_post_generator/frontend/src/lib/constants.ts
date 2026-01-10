@@ -1,21 +1,18 @@
 /**
  * Application Constants
  * ======================
- * Centralized constants to avoid hardcoding values throughout the app.
+ * All branding configured via .env file - see env.example
  */
 
-// =============================================================================
-// PROFILE CONFIGURATION
-// =============================================================================
-
+// Profile config loaded from .env (VITE_ prefix required for frontend)
 export const PROFILE_CONFIG = {
-  name: 'Sachin Saurav',
-  handle: '@ersachinsaurav',
-  title: 'Tech Lead @ Entrata India | Full Stack Software Engineer',
-  verified: true,
-  linkedin_url: 'linkedin.com/in/ersachinsaurav',
-  instagram_url: 'instagram.com/ersachinsaurav',
-  website: 'sachinsaurav.dev',
+  name: import.meta.env.VITE_BRAND_NAME,
+  handle: import.meta.env.VITE_BRAND_HANDLE,
+  title: import.meta.env.VITE_BRAND_TITLE,
+  verified: import.meta.env.VITE_BRAND_VERIFIED === 'true',
+  linkedin_url: import.meta.env.VITE_BRAND_LINKEDIN_URL,
+  instagram_url: import.meta.env.VITE_BRAND_INSTAGRAM_URL,
+  website: import.meta.env.VITE_BRAND_WEBSITE,
 } as const;
 
 // =============================================================================

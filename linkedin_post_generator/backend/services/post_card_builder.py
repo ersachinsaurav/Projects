@@ -55,10 +55,10 @@ class PostCardStyle:
     padding: int = 60
     avatar_size: int = 80  # Increased from 64
 
-    # Profile
-    name: str = "Sachin Saurav"
-    handle: str = "@ersachinsaurav"
-    verified: bool = True
+    # Profile (customize in frontend/src/lib/constants.ts)
+    name: str = "Your Name"
+    handle: str = "@yourusername"
+    verified: bool = False
 
     @property
     def bg_color(self) -> tuple:
@@ -192,12 +192,12 @@ class PostCardBuilder:
 
     def _draw_carousel_footer(self, draw: ImageDraw.Draw, y_start: int, height: int, style: PostCardStyle):
         """Draw a compact footer with icons for carousel postcards (consistent with cover)."""
-        from ..utils.constants import SOCIAL_BRANDING
+        from ..utils.constants import get_social_branding
 
         # Get branding info
-        branding = SOCIAL_BRANDING
-        handle_text = style.handle or branding.get('handle', '@ersachinsaurav')
-        website_text = branding.get('website', 'sachinsaurav.dev')
+        branding = get_social_branding()
+        handle_text = style.handle or branding.get('handle', '@yourusername')
+        website_text = branding.get('website', 'yourwebsite.com')
 
         # Font sizes - 16px to match icon size visually (consistent with carousel cover)
         font_size = 16
@@ -864,8 +864,8 @@ def create_post_card(
     short_post: Optional[str] = None,
     avatar_base64: Optional[str] = None,
     theme: Literal['dark', 'light'] = 'dark',
-    name: str = "Sachin Saurav",
-    handle: str = "@ersachinsaurav",
+    name: str = "Your Name",
+    handle: str = "@yourusername",
 ) -> tuple[str, int]:
     """
     Quick function to create a post card.

@@ -1,8 +1,8 @@
 """
 Provider Package
 ================
-Claude (Bedrock) for text, Nova Canvas + Titan for images.
-No OpenAI dependencies.
+Text: Claude (Bedrock), Ollama (Qwen/Mistral/Llama)
+Image: Nova Canvas, Titan, SDXL WebUI
 """
 
 from .base import (

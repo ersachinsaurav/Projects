@@ -57,10 +57,10 @@ class QuoteCardConfig:
     profile_handle: str = ""
     profile_image_base64: Optional[str] = None
 
-    # Branding
+    # Branding (customize via environment variables)
     show_footer: bool = True
-    footer_handle: str = "@ersachinsaurav"
-    footer_website: str = "sachinsaurav.dev"
+    footer_handle: str = "@yourusername"
+    footer_website: str = "yourwebsite.com"
 
 
 class QuoteCardBuilder:
@@ -687,8 +687,8 @@ def create_quote_card(
 
 def create_jean_lee_style(
     quote_text: str,
-    profile_name: str = "Sachin Saurav",
-    profile_handle: str = "@ersachinsaurav",
+    profile_name: str = "Your Name",
+    profile_handle: str = "@yourusername",
     profile_image_base64: Optional[str] = None,
 ) -> str:
     """

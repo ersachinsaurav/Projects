@@ -16,7 +16,7 @@ from typing import Optional
 from PIL import Image, ImageDraw, ImageFont
 from reportlab.pdfgen import canvas
 
-from ..utils.constants import SOCIAL_BRANDING
+from ..utils.constants import get_social_branding
 
 # More subtle footer - lower opacity for better blend
 DEFAULT_FOOTER_OPACITY = 0.55
@@ -31,7 +31,7 @@ class ImageProcessor:
     ):
         """Initialize with footer configuration."""
         self.footer_opacity = footer_opacity
-        self.branding = SOCIAL_BRANDING
+        self.branding = get_social_branding()
 
     def _get_font(self, size: int, bold: bool = False):
         """Get appropriate font, with macOS/Linux fallbacks."""
@@ -150,8 +150,8 @@ class ImageProcessor:
         Add branded footer overlay to image.
 
         Footer format:
-        [LinkedIn] [Instagram]  @ersachinsaurav
-        [Globe] sachinsaurav.dev
+        [LinkedIn] [Instagram]  @yourusername
+        [Globe] yourwebsite.com
 
         Args:
             image_base64: Base64 encoded image
@@ -227,11 +227,11 @@ class ImageProcessor:
         line_y = footer_y + (footer_height - icon_size) // 2
 
         # Get branding info
-        handle_text = branding.get("handle", "@ersachinsaurav")
-        website_text = branding.get("website", "sachinsaurav.dev")
+        handle_text = branding.get("handle", "@yourusername")
+        website_text = branding.get("website", "yourwebsite.com")
 
         # Single-line compact layout with drawn icons:
-        # [LinkedIn] [Instagram]  @ersachinsaurav  •  [Globe] sachinsaurav.dev
+        # [LinkedIn] [Instagram]  @handle  •  [Globe] website.com
 
         # Calculate text widths for centering
         handle_bbox = draw.textbbox((0, 0), handle_text, font=bold_font)
@@ -448,8 +448,8 @@ class ImageProcessor:
             main_text=main_text,
             subtitle=subtitle or "",
             show_footer=show_footer,
-            footer_handle=self.branding.get("handle", "@ersachinsaurav"),
-            footer_website=self.branding.get("website", "sachinsaurav.dev"),
+            footer_handle=self.branding.get("handle", "@yourusername"),
+            footer_website=self.branding.get("website", "yourwebsite.com"),
         )
 
         builder = QuoteCardBuilder()

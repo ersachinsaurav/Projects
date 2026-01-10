@@ -49,7 +49,20 @@ import {
   DEFAULT_IMAGE_MODEL,
   DEFAULT_TEXT_MODEL,
 } from './lib/defaults';
-import profilePicture from './images/profilePicture.jpeg';
+import { PROFILE_CONFIG } from './lib/constants';
+// =============================================================================
+// PROFILE PICTURE CUSTOMIZATION
+// =============================================================================
+//
+// To use your own profile picture:
+// 1. Add your photo as 'profilePicture.jpeg' (or .jpg/.png) in src/images/
+// 2. Uncomment the import below and comment out the placeholder import
+// 3. Recommended size: 200x200 pixels or larger (square)
+//
+// import profilePicture from './images/profilePicture.jpeg';
+//
+// Using placeholder by default:
+import profilePicture from './images/placeholder-avatar.svg';
 
 function App() {
   // Session management
@@ -252,9 +265,9 @@ function App() {
         short_post: textData.short_post || undefined,
         avatar_base64: profilePicBase64 || undefined,
         theme: cardTheme, // Use cardTheme which falls back to postcardTheme state
-        name: 'Sachin Saurav',
-        handle: '@ersachinsaurav',
-        verified: true,
+        name: PROFILE_CONFIG.name,
+        handle: PROFILE_CONFIG.handle,
+        verified: PROFILE_CONFIG.verified,
       });
 
       // Update imageData to show the post card in preview
@@ -472,9 +485,9 @@ function App() {
         short_post: text.substring(0, 150).trim(),
         avatar_base64: profilePicBase64 || undefined,
         theme: theme,
-        name: 'Sachin Saurav',
-        handle: '@ersachinsaurav',
-        verified: true,
+        name: PROFILE_CONFIG.name,
+        handle: PROFILE_CONFIG.handle,
+        verified: PROFILE_CONFIG.verified,
       });
 
       // Store the generated image for the Postcard tab
@@ -526,11 +539,11 @@ function App() {
             </button>
 
             <a
-              href="https://github.com/ersachinsaurav/Projects/tree/main/linkedin_post_generator"
+              href="https://github.com/YOUR_USERNAME/linkedin_post_generator"
               target="_blank"
               rel="noopener noreferrer"
               className={`p-2 rounded-full transition-colors ${isDark ? 'hover:bg-dark-border' : 'hover:bg-gray-100'}`}
-              title="View source"
+              title="View source on GitHub"
             >
               <Github className={`w-5 h-5 ${isDark ? 'text-dark-text' : 'text-linkedin-text-secondary'}`} />
             </a>

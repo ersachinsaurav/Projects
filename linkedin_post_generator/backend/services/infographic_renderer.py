@@ -17,7 +17,7 @@ import os
 from typing import Optional, List, Literal
 from PIL import Image, ImageDraw, ImageFont
 
-from ..utils.constants import SOCIAL_BRANDING
+from ..utils.constants import get_social_branding
 from .text_extractor import _simple_extract as _text_extractor_simple_extract
 
 logger = logging.getLogger(__name__)
@@ -96,7 +96,7 @@ class InfographicRenderer:
 
     def __init__(self, branding: Optional[dict] = None):
         """Initialize renderer with branding."""
-        self.branding = branding or SOCIAL_BRANDING
+        self.branding = branding or get_social_branding()
         self._fonts = {}
 
     def _load_font(self, style: str, size: int) -> ImageFont.FreeTypeFont:
@@ -238,8 +238,8 @@ class InfographicRenderer:
 
     def _draw_footer(self, draw: ImageDraw, footer_font: ImageFont.FreeTypeFont) -> None:
         """Draw branded footer with drawn icons - NO overlay background."""
-        handle = self.branding.get("handle", "@ersachinsaurav")
-        website = self.branding.get("website", "sachinsaurav.dev")
+        handle = self.branding.get("handle", "@yourusername")
+        website = self.branding.get("website", "yourwebsite.com")
 
         # Skip footer if both handle and website are empty
         if not handle.strip() and not website.strip():

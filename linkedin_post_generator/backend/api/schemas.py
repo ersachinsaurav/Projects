@@ -246,9 +246,9 @@ class PostCardGenerationRequestSchema(BaseModel):
     post_text: str = Field(..., min_length=1, max_length=2000)
     short_post: Optional[str] = Field(None, max_length=400)
     avatar_base64: Optional[str] = None
-    name: str = "Sachin Saurav"
-    handle: str = "@ersachinsaurav"
-    verified: bool = True
+    name: str = "Your Name"  # Set via VITE_BRAND_NAME in .env
+    handle: str = "@yourusername"  # Set via VITE_BRAND_HANDLE in .env
+    verified: bool = False
     theme: Literal['dark', 'light'] = 'dark'
 
 

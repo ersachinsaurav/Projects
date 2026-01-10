@@ -451,11 +451,11 @@ class BedrockTextProvider(TextModelProvider):
         if isinstance(hashtags, str):
             hashtags = [h.strip() for h in hashtags.split(",") if h.strip()]
 
-        # Ensure required personal hashtags are present
-        required_hashtags = ["#SachinSaurav", "#BySachinSaurav"]
-        for tag in required_hashtags:
-            if tag not in hashtags:
-                hashtags.append(tag)
+        # Ensure our branding hashtag is present
+        from ..utils.constants import get_branding_hashtag
+        our_branding = get_branding_hashtag()
+        if our_branding not in hashtags:
+            hashtags.append(our_branding)
 
         # Parse image prompts (only if present - when generate_images=True)
         image_prompts = []

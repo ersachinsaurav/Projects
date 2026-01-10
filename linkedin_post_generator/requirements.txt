@@ -10,8 +10,7 @@ python-multipart==0.0.18
 pydantic==2.10.4
 pydantic-settings==2.7.0
 
-# AI Providers
-openai==1.59.3
+# AI Providers (AWS Bedrock for Claude/Nova/Titan)
 boto3==1.36.2
 botocore==1.36.2
 

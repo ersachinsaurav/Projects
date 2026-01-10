@@ -342,8 +342,9 @@ class OllamaTextProvider(TextModelProvider):
 
         Temperature: 0.1 | Max tokens: 1200 | Retries: 3
         """
+        from ..utils.constants import get_branding_hashtag
         if author_hashtags is None:
-            author_hashtags = ["#SachinSaurav", "#BySachinSaurav"]
+            author_hashtags = [get_branding_hashtag()]
 
         system_prompt = get_step3_system_prompt()
         user_prompt = get_step3_user_prompt(step2_output, author_hashtags)
@@ -759,11 +760,11 @@ class OllamaTextProvider(TextModelProvider):
         if isinstance(hashtags, str):
             hashtags = [h.strip() for h in hashtags.split(",") if h.strip()]
 
-        # Ensure required personal hashtags are present
-        required_hashtags = ["#SachinSaurav", "#BySachinSaurav"]
-        for tag in required_hashtags:
-            if tag not in hashtags:
-                hashtags.append(tag)
+        # Ensure our branding hashtag is present
+        from ..utils.constants import get_branding_hashtag
+        our_branding = get_branding_hashtag()
+        if our_branding not in hashtags:
+            hashtags.append(our_branding)
 
         # Parse image prompts
         image_prompts = []

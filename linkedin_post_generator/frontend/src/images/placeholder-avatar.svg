@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <!-- Background circle -->
+  <circle cx="100" cy="100" r="100" fill="#0077B5"/>
+
+  <!-- Person silhouette -->
+  <circle cx="100" cy="75" r="35" fill="#ffffff"/>
+  <ellipse cx="100" cy="165" rx="55" ry="45" fill="#ffffff"/>
+
+  <!-- Plus icon to indicate "add your photo" -->
+  <circle cx="155" cy="155" r="25" fill="#ffffff" stroke="#0077B5" stroke-width="3"/>
+  <line x1="155" y1="143" x2="155" y2="167" stroke="#0077B5" stroke-width="4" stroke-linecap="round"/>
+  <line x1="143" y1="155" x2="167" y2="155" stroke="#0077B5" stroke-width="4" stroke-linecap="round"/>
+</svg>
+

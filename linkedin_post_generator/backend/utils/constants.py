@@ -126,45 +126,57 @@ IMAGE_STYLES = [
 # Footer branding configuration
 IMAGE_FOOTER_OPACITY = 0.85
 
-# Social branding for footer
-SOCIAL_BRANDING = {
-    "handle": "@ersachinsaurav",
-    "website": "sachinsaurav.dev",
-    "linkedin_url": "linkedin.com/in/ersachinsaurav",
-    "instagram_url": "instagram.com/ersachinsaurav",
-}
 
-# CTA footer for text content
-# NOTE: Explicit CTAs like "Repost" and "Follow" HURT engagement and make posts feel "creator-optimized"
-# Strong content earns engagement without asking. Only used for image footers now.
+# =============================================================================
+# BRANDING FUNCTIONS (Load from .env via config.py)
+# =============================================================================
+
+def get_social_branding() -> dict:
+    """
+    Get social branding from environment configuration (.env file).
+
+    Configure in .env:
+        BRAND_NAME=Your Name
+        BRAND_HANDLE=@yourusername
+        BRAND_WEBSITE=yourwebsite.com
+        BRAND_LINKEDIN_URL=linkedin.com/in/yourusername
+        BRAND_INSTAGRAM_URL=instagram.com/yourusername
+    """
+    from ..config import settings
+    return {
+        "name": settings.brand_name,
+        "handle": settings.brand_handle,
+        "website": settings.brand_website,
+        "linkedin_url": settings.brand_linkedin_url,
+        "instagram_url": settings.brand_instagram_url,
+    }
+
+
+def get_branding_hashtag() -> str:
+    """
+    Get the branding hashtag from the configured name.
+    Converts "Your Name" to "#YourName" for use in posts.
+    """
+    branding = get_social_branding()
+    name = branding.get("name", "YourName")
+    # Remove spaces and special characters, create hashtag
+    hashtag = "".join(c for c in name if c.isalnum())
+    return f"#{hashtag}"
+
+
 def get_post_cta_footer(for_image: bool = False) -> str:
     """
-    Get the CTA footer to append to images only.
+    Get the CTA footer for image footers only.
 
-    IMPORTANT: Explicit "Repost" and "Follow" CTAs hurt text post engagement.
-    Research shows they trigger "creator post" detection and reduce shares.
-    Only use for image footers where branding is expected.
-
-    Args:
-        for_image: If True, returns single-line CTA for image footer.
-                   If False, returns EMPTY string (no CTA for text posts).
-
-    Returns:
-        CTA footer for images only, empty string for text posts
+    NOTE: Explicit CTAs hurt text post engagement - only used for images.
     """
-    name = SOCIAL_BRANDING.get("name", "Sachin Saurav")
-
     if for_image:
-        # Single line for image footer - NO EMOJIS (fonts don't render them properly)
+        branding = get_social_branding()
+        name = branding.get("name", "Your Name")
         return f"+ Follow {name} for more insights"
-    else:
-        # NO CTA for text posts - strong content earns engagement without asking
-        return ""
+    return ""
 
 
-# Branding name for consistency
-SOCIAL_BRANDING["name"] = "Sachin Saurav"
-
-# Always generate at least 1 image prompt
+# Image generation limits
 MIN_IMAGE_COUNT = 1
 MAX_IMAGE_COUNT = 7
