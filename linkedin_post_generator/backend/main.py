@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     """Application lifespan events."""
     # Startup
-    print(f"🚀 Starting {settings.app_name} v{settings.app_version}")
+    print(f"Starting {settings.app_name} v{settings.app_version}")
     print(f"   Debug mode: {settings.debug}")
     print(f"   AWS Region: {settings.aws_region}")
     print(f"   Ollama URL: {settings.ollama_base_url}")
@@ -29,7 +29,7 @@ async def lifespan(app: FastAPI):
     yield
 
     # Shutdown
-    print(f"👋 Shutting down {settings.app_name}")
+    print(f"Shutting down {settings.app_name}")
 
 
 # Create FastAPI app
@@ -100,7 +100,7 @@ if __name__ == "__main__":
     uvicorn.run(
         "backend.main:app",
         host="0.0.0.0",
-        port=5170,
+        port=5111,
         reload=settings.debug,
     )
 

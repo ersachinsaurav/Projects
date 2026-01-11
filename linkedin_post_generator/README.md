@@ -118,7 +118,7 @@ AI-powered LinkedIn post and image generator with multi-provider support (AWS Be
 |----------|------|------|-------|
 | **Ollama** | Local | Free | [Install Ollama](https://ollama.ai), run `ollama pull qwen2.5:7b` |
 | **AWS Bedrock** | Cloud | Paid | Configure `~/.aws/credentials` |
-| **SDXL WebUI** | Local | Free | Run [Automatic1111](https://github.com/AUTOMATIC1111/stable-diffusion-webui) on port 7860 |
+| **SDXL WebUI** | Local | Free | Run [Automatic1111](https://github.com/AUTOMATIC1111/stable-diffusion-webui) on port 5223 |
 
 > **Recommended for beginners**: Start with Ollama (free, local) for text generation.
 
@@ -141,9 +141,9 @@ chmod +x launch.sh
 ```
 
 This starts:
-- **Backend**: http://localhost:5170 (Python + FastAPI)
-- **Frontend**: http://localhost:5173 (React + Vite)
-- **API Documentation**: http://localhost:5170/docs (Swagger)
+- **Backend**: http://localhost:5111 (Python + FastAPI)
+- **Frontend**: http://localhost:5112 (React + Vite)
+- **API Documentation**: http://localhost:5111/docs (Swagger)
 
 ### Manual Setup
 
@@ -152,7 +152,7 @@ This starts:
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
-uvicorn backend.main:app --host 0.0.0.0 --port 5170 --reload
+uvicorn backend.main:app --host 0.0.0.0 --port 5111 --reload
 ```
 
 **Frontend:**
@@ -240,7 +240,7 @@ VITE_BRAND_INSTAGRAM_URL=instagram.com/yourusername
 ### Example: Generate Text
 
 ```bash
-curl -X POST http://localhost:5170/api/v1/generate-text \
+curl -X POST http://localhost:5111/api/v1/generate-text \
   -H "Content-Type: application/json" \
   -d '{
     "session_id": "my-session-123",
@@ -264,7 +264,7 @@ curl -X POST http://localhost:5170/api/v1/generate-text \
 ### Example: Generate Images
 
 ```bash
-curl -X POST http://localhost:5170/api/v1/generate-images \
+curl -X POST http://localhost:5111/api/v1/generate-images \
   -H "Content-Type: application/json" \
   -d '{
     "session_id": "my-session-123",
@@ -279,7 +279,7 @@ curl -X POST http://localhost:5170/api/v1/generate-images \
 ### Example: Generate Post Card (Instant, No AI)
 
 ```bash
-curl -X POST http://localhost:5170/api/v1/generate-post-card \
+curl -X POST http://localhost:5111/api/v1/generate-post-card \
   -H "Content-Type: application/json" \
   -d '{
     "session_id": "my-session-123",
@@ -446,8 +446,8 @@ All settings are in `.env` (see `env.example` for full list):
 ```env
 # AI Providers
 AWS_REGION=us-east-1
-OLLAMA_BASE_URL=http://localhost:11434
-SDXL_WEBUI_URL=http://localhost:7860
+OLLAMA_BASE_URL=http://localhost:5222
+SDXL_WEBUI_URL=http://localhost:5223
 
 # SDXL Settings
 SDXL_STEPS=25
@@ -466,7 +466,7 @@ See [Personalization](#-personalization) for branding configuration.
 
 ```bash
 # Backend with auto-reload
-uvicorn backend.main:app --host 0.0.0.0 --port 5170 --reload
+uvicorn backend.main:app --host 0.0.0.0 --port 5111 --reload
 
 # Frontend with HMR
 cd frontend && npm run dev

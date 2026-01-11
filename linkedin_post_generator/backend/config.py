@@ -20,7 +20,7 @@ class Settings(BaseSettings):
 
     # API Settings
     api_prefix: str = "/api/v1"
-    cors_origins: Union[str, list[str]] = "http://localhost:5173,http://localhost:5170"
+    cors_origins: Union[str, list[str]] = "http://localhost:5112,http://localhost:5111"
 
     @field_validator("cors_origins", mode="before")
     @classmethod
@@ -44,10 +44,10 @@ class Settings(BaseSettings):
     bedrock_titan_image_model: str = "amazon.titan-image-generator-v2:0"
 
     # Ollama
-    ollama_base_url: str = "http://localhost:11434"
+    ollama_base_url: str = "http://localhost:5222"
 
     # SDXL WebUI
-    sdxl_webui_url: str = "http://localhost:7860"
+    sdxl_webui_url: str = "http://localhost:5223"
     sdxl_steps: int = 25
     sdxl_sampler: str = "DPM++ 2M Karras"
     sdxl_cfg_scale: float = 6.5

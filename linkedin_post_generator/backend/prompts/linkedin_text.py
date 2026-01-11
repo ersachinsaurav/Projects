@@ -153,7 +153,7 @@ Example format:
         output_format = f'''{{
   "post_text": "The complete LinkedIn post with Unicode bold and strategic emojis. No hashtags in body.",
   "short_post": "DISTILLED ESSENCE with sharp rhythm (5-8 SHORT punchy lines, max 400 chars). NOT a summary. Open with ACTION. Use REPETITION for rhythm. Split insight into 2 short lines. PLAIN TEXT ONLY. No emojis.",
-  "hashtags": ["#DomainTag1", "#DomainTag2", "#DomainTag3", "#PersonalBrandTag"],
+  "hashtags": ["#DomainTag1", "#DomainTag2", "#DomainTag3", "#DomainTag4"],
   {image_recommendation_format},
   "image_strategy": {{
     "image_count": 1,
@@ -178,7 +178,7 @@ Example format:
   }},
   {infographic_text_format}
 }}'''
-        critical_rules = '''## CRITICAL RULES (NO EXCEPTIONS - VIOLATIONS WILL BE REJECTED)
+        critical_rules = f'''## CRITICAL RULES (NO EXCEPTIONS - VIOLATIONS WILL BE REJECTED)
 1. NEVER use markdown (** or *)
 2. NEVER include hashtags in post_text (they go ONLY in hashtags array)
 3. Use 1-2 emojis MAXIMUM, only if they add meaning (prefer none over many)
@@ -198,7 +198,7 @@ Example format:
 16. short_post MUST capture the REALIZATION moment, not be a summary. Use CONFIDENT language (no "just").
 17. ALL JSON keys shown above are REQUIRED
 18. infographic_text.title MUST be the core insight (5-10 words)
-{"18. For SDXL: negative_prompt MUST explicitly include 'text, words, letters, labels'" if image_model.lower() == "sdxl" else ""}
+{{"18. For SDXL: negative_prompt MUST explicitly include 'text, words, letters, labels'" if image_model.lower() == "sdxl" else ""}}
 
 ## POST STRUCTURE VALIDATION
 Before generating, verify the post follows the discovery arc:
@@ -252,10 +252,10 @@ POST CARDS are better because:
         output_format = f'''{{
   "post_text": "The complete LinkedIn post with Unicode bold and strategic emojis. No hashtags in body.",
   "short_post": "DISTILLED ESSENCE with sharp rhythm (5-8 SHORT punchy lines, max 400 chars). Open with ACTION. Use REPETITION. Split insight into 2 short lines. PLAIN TEXT ONLY.",
-  "hashtags": ["#DomainTag1", "#DomainTag2", "#DomainTag3", "#PersonalBrandTag"],
+  "hashtags": ["#DomainTag1", "#DomainTag2", "#DomainTag3", "#DomainTag4"],
   {image_recommendation_format}
 }}'''
-        critical_rules = '''## CRITICAL RULES (NO EXCEPTIONS - VIOLATIONS WILL BE REJECTED)
+        critical_rules = f'''## CRITICAL RULES (NO EXCEPTIONS - VIOLATIONS WILL BE REJECTED)
 1. NEVER use markdown (** or *)
 2. NEVER include hashtags in post_text (they go ONLY in hashtags array)
 3. Use 1-2 emojis MAXIMUM, only if they add meaning (prefer none over many)

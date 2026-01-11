@@ -15,7 +15,9 @@ build/
 .env
 .env.local
 .env.*.local
+
 # Note: env.example IS committed (template for users)
+!.env.example
 
 # Logs (IMPORTANT: Contains sensitive user data and prompts!)
 logs/
@@ -43,4 +45,7 @@ frontend/.vite/
 tmp/
 temp/
 *.tmp
+
+# Never commit Profile Picture
+profilePicture.png
 

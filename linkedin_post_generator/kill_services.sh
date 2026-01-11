@@ -39,7 +39,7 @@ kill_by_port() {
             # Only kill if it's in our project directory
             if echo "$proc_info" | grep -qE "$project_path|linkedin_post_generator"; then
                 if [ "$found_any" = false ]; then
-                    echo -e "${YELLOW}🔍 Found processes on port $port ($name):${NC}"
+                    echo -e "${YELLOW}[FIND] Found processes on port $port ($name):${NC}"
                     found_any=true
                 fi
                 echo -e "   PID $pid: $proc_info"
@@ -56,7 +56,7 @@ kill_by_port() {
                 local proc_info=$(ps -p $pid -o args= 2>/dev/null || echo "")
                 if echo "$proc_info" | grep -qE "$project_path|linkedin_post_generator"; then
                     if kill -0 $pid 2>/dev/null; then
-                        echo -e "${RED}   ⚠️  Force killing PID $pid${NC}"
+                        echo -e "${RED}   [WARN] Force killing PID $pid${NC}"
                         kill -KILL $pid 2>/dev/null && KILLED_COUNT=$((KILLED_COUNT + 1)) || true
                     fi
                 fi
@@ -92,7 +92,7 @@ kill_by_pattern() {
             fi
 
             if [ "$found_any" = false ]; then
-                echo -e "${YELLOW}🔍 Found processes matching '$pattern' ($name):${NC}"
+                echo -e "${YELLOW}[FIND] Found processes matching '$pattern' ($name):${NC}"
                 found_any=true
             fi
 
@@ -116,7 +116,7 @@ kill_by_pattern() {
                     fi
                 fi
                 if kill -0 $pid 2>/dev/null; then
-                    echo -e "${RED}   ⚠️  Force killing PID $pid${NC}"
+                    echo -e "${RED}   [WARN] Force killing PID $pid${NC}"
                     kill -KILL $pid 2>/dev/null && KILLED_COUNT=$((KILLED_COUNT + 1)) || true
                 fi
             done
@@ -127,15 +127,15 @@ kill_by_pattern() {
 
 # Kill by ports (most reliable method)
 # NOTE: We only kill ports if we can verify the process belongs to this project
-echo -e "${BLUE}📡 Checking ports...${NC}"
-kill_by_port 5170 "Backend API (FastAPI/Uvicorn)"
-kill_by_port 5173 "Frontend Dev Server (Vite)"
-kill_by_port 4173 "Frontend Preview Server"
-# NOTE: SDXL WebUI (port 7860) is NOT killed - it's an external service
+echo -e "${BLUE}[CHECK] Checking ports...${NC}"
+kill_by_port 5111 "Backend API (FastAPI/Uvicorn)"
+kill_by_port 5112 "Frontend Dev Server (Vite)"
+kill_by_port 5113 "Frontend Preview Server"
+# NOTE: SDXL WebUI (port 5223) is NOT killed - it's an external service
 # that may be running independently. Only kill if explicitly started by this app.
 
 # Kill by process patterns (only in this project directory)
-echo -e "${BLUE}🔍 Checking process patterns...${NC}"
+echo -e "${BLUE}[CHECK] Checking process patterns...${NC}"
 project_path=$(pwd)
 
 # Uvicorn processes
@@ -154,7 +154,7 @@ kill_by_pattern "npm.*run.*dev" "NPM Dev Process" "$project_path"
 kill_by_pattern "watchfiles.*backend" "Watchfiles (Uvicorn Reload)" "$project_path"
 
 # Python processes in THIS project directory only (be careful!)
-echo -e "${BLUE}🔍 Checking Python processes in project directory...${NC}"
+echo -e "${BLUE}[CHECK] Checking Python processes in project directory...${NC}"
 project_path=$(pwd)
 project_pids=$(ps aux | grep -E "python.*$project_path|python.*linkedin_post_generator" | grep -v grep | grep -v "$$" | awk '{print $2}' || true)
 
@@ -175,7 +175,7 @@ if [ -n "$project_pids" ]; then
         proc_args=$(ps -p $pid -o args= 2>/dev/null || echo "")
         if echo "$proc_args" | grep -qE "$project_path|linkedin_post_generator"; then
             if kill -0 $pid 2>/dev/null; then
-                echo -e "${RED}   ⚠️  Force killing PID $pid${NC}"
+                echo -e "${RED}   [WARN] Force killing PID $pid${NC}"
                 kill -KILL $pid 2>/dev/null && KILLED_COUNT=$((KILLED_COUNT + 1)) || true
             fi
         fi
@@ -186,18 +186,18 @@ fi
 # Summary
 echo -e "${GREEN}════════════════════════════════════════════════${NC}"
 if [ $KILLED_COUNT -gt 0 ]; then
-    echo -e "${GREEN}✅ Killed $KILLED_COUNT process(es)${NC}"
+    echo -e "${GREEN}[OK] Killed $KILLED_COUNT process(es)${NC}"
 else
-    echo -e "${YELLOW}ℹ️  No processes found to kill${NC}"
+    echo -e "${YELLOW}[INFO] No processes found to kill${NC}"
 fi
 echo -e "${GREEN}════════════════════════════════════════════════${NC}"
 echo ""
 
 # Final verification (only check our app ports, not external services)
-echo -e "${BLUE}🔍 Final check for remaining processes...${NC}"
+echo -e "${BLUE}[CHECK] Final check for remaining processes...${NC}"
 remaining_ports=""
 project_path=$(pwd)
-for port in 5170 5173 4173; do
+for port in 5111 5112 5113; do
     pids=$(lsof -ti :$port 2>/dev/null || true)
     if [ -n "$pids" ]; then
         # Check if any PID belongs to our project
@@ -212,12 +212,11 @@ for port in 5170 5173 4173; do
 done
 
 if [ -n "$remaining_ports" ]; then
-    echo -e "${RED}⚠️  Warning: Process(es) still using port(s):$remaining_ports${NC}"
-    echo -e "${YELLOW}   You may need to manually kill them or restart your terminal${NC}"
+    echo -e "${RED}[WARN] Process(es) still using port(s):$remaining_ports${NC}"
+    echo -e "${YELLOW}       You may need to manually kill them or restart your terminal${NC}"
 else
-    echo -e "${GREEN}✅ All app ports (5170, 5173, 4173) are free${NC}"
+    echo -e "${GREEN}[OK] All app ports (5111, 5112, 5113) are free${NC}"
 fi
-echo -e "${BLUE}ℹ️  Note: External services (like SDXL on port 7860) are not checked${NC}"
+echo -e "${BLUE}[NOTE] External services (like SDXL on port 5223) are not checked${NC}"
 
 echo ""
-

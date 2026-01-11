@@ -21,11 +21,11 @@ cd "$SCRIPT_DIR"
 
 # Check for .env file
 if [ ! -f .env ]; then
-    echo -e "${YELLOW}⚠️  No .env file found. Creating from env.example...${NC}"
+    echo -e "${YELLOW}[WARN] No .env file found. Creating from env.example...${NC}"
     if [ -f env.example ]; then
         cp env.example .env
-        echo -e "${GREEN}✅ Created .env from env.example${NC}"
-        echo -e "${YELLOW}   Please edit .env with your settings${NC}"
+        echo -e "${GREEN}[OK] Created .env from env.example${NC}"
+        echo -e "${YELLOW}     Please edit .env with your settings${NC}"
     else
         cat > .env << 'EOF'
 # LinkedIn Post Generator Configuration
@@ -57,28 +57,28 @@ command_exists() {
 
 # Check Python
 if ! command_exists python3; then
-    echo -e "${RED}❌ Python 3 is required but not installed.${NC}"
+    echo -e "${RED}[ERROR] Python 3 is required but not installed.${NC}"
     exit 1
 fi
 
 PYTHON_VERSION=$(python3 --version 2>&1 | cut -d' ' -f2 | cut -d'.' -f1,2)
-echo -e "${GREEN}✅ Python: $PYTHON_VERSION${NC}"
+echo -e "${GREEN}[OK] Python: $PYTHON_VERSION${NC}"
 
 # Check/create virtual environment
 if [ ! -d "venv" ]; then
-    echo -e "${YELLOW}📦 Creating virtual environment...${NC}"
+    echo -e "${YELLOW}[INFO] Creating virtual environment...${NC}"
     python3 -m venv venv
 fi
 
 # Activate virtual environment
 source venv/bin/activate
-echo -e "${GREEN}✅ Virtual environment activated${NC}"
+echo -e "${GREEN}[OK] Virtual environment activated${NC}"
 
 # Install/upgrade dependencies
-echo -e "${YELLOW}📥 Installing dependencies...${NC}"
+echo -e "${YELLOW}[INFO] Installing dependencies...${NC}"
 pip install -q --upgrade pip
 pip install -q -r requirements.txt
-echo -e "${GREEN}✅ Dependencies installed${NC}"
+echo -e "${GREEN}[OK] Dependencies installed${NC}"
 
 # Parse arguments
 BACKEND_ONLY=false
@@ -107,42 +107,42 @@ done
 # Start backend
 if [ "$FRONTEND_ONLY" = false ]; then
     echo ""
-    echo -e "${BLUE}🚀 Starting Backend API...${NC}"
+    echo -e "${BLUE}[START] Starting Backend API...${NC}"
 
     if [ "$DEV_MODE" = true ]; then
-        uvicorn backend.main:app --host 0.0.0.0 --port 5170 --reload &
+        uvicorn backend.main:app --host 0.0.0.0 --port 5111 --reload &
         BACKEND_PID=$!
-        echo -e "${GREEN}✅ Backend running on http://localhost:5170 (PID: $BACKEND_PID)${NC}"
-        echo -e "${GREEN}   📚 API Docs: http://localhost:5170/docs${NC}"
+        echo -e "${GREEN}[OK] Backend running on http://localhost:5111 (PID: $BACKEND_PID)${NC}"
+        echo -e "${GREEN}     API Docs: http://localhost:5111/docs${NC}"
     else
-        uvicorn backend.main:app --host 0.0.0.0 --port 5170 --workers 4 &
+        uvicorn backend.main:app --host 0.0.0.0 --port 5111 --workers 4 &
         BACKEND_PID=$!
-        echo -e "${GREEN}✅ Backend running on http://localhost:5170 (Production, PID: $BACKEND_PID)${NC}"
+        echo -e "${GREEN}[OK] Backend running on http://localhost:5111 (Production, PID: $BACKEND_PID)${NC}"
     fi
 fi
 
 # Start frontend
 if [ "$BACKEND_ONLY" = false ] && [ -d "frontend" ]; then
     echo ""
-    echo -e "${BLUE}🚀 Starting Frontend...${NC}"
+    echo -e "${BLUE}[START] Starting Frontend...${NC}"
 
     cd frontend
 
     # Check if node_modules exists
     if [ ! -d "node_modules" ]; then
-        echo -e "${YELLOW}📥 Installing frontend dependencies...${NC}"
+        echo -e "${YELLOW}[INFO] Installing frontend dependencies...${NC}"
         npm install
     fi
 
     if [ "$DEV_MODE" = true ]; then
         npm run dev &
         FRONTEND_PID=$!
-        echo -e "${GREEN}✅ Frontend running on http://localhost:5173 (PID: $FRONTEND_PID)${NC}"
+        echo -e "${GREEN}[OK] Frontend running on http://localhost:5112 (PID: $FRONTEND_PID)${NC}"
     else
         npm run build
         npm run preview &
         FRONTEND_PID=$!
-        echo -e "${GREEN}✅ Frontend running on http://localhost:4173 (Production, PID: $FRONTEND_PID)${NC}"
+        echo -e "${GREEN}[OK] Frontend running on http://localhost:5113 (Production, PID: $FRONTEND_PID)${NC}"
     fi
 
     cd ..
@@ -159,4 +159,3 @@ trap "echo ''; echo -e '${YELLOW}Shutting down...${NC}'; kill $BACKEND_PID $FRON
 
 # Keep script running
 wait
-

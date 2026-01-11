@@ -24,10 +24,10 @@ export default defineConfig(({ mode }) => {
       'import.meta.env.VITE_BRAND_INSTAGRAM_URL': JSON.stringify(env.VITE_BRAND_INSTAGRAM_URL || 'instagram.com/yourusername'),
     },
     server: {
-      port: 5173,
+      port: 5112,
       proxy: {
         '/api': {
-          target: 'http://localhost:5170',
+          target: 'http://localhost:5111',
           changeOrigin: true,
         },
       },

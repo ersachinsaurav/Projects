@@ -3,11 +3,11 @@ SDXL WebUI Image Provider
 ==========================
 Provider for local Stable Diffusion XL via Automatic1111 WebUI API.
 
-This provider connects to a local SDXL instance running on port 7860
+This provider connects to a local SDXL instance running on port 5223
 (default) and generates images using the txt2img API endpoint.
 
 SDXL WebUI API:
-- Endpoint: http://localhost:7860/sdapi/v1/txt2img
+- Endpoint: http://localhost:5223/sdapi/v1/txt2img
 - Supports full prompt control
 - High quality image generation
 - Configurable sampling parameters
@@ -80,7 +80,7 @@ class SDXLWebUIProvider(ImageModelProvider):
         Initialize SDXL WebUI provider.
 
         Args:
-            webui_url: Base URL for WebUI (default: http://localhost:7860)
+            webui_url: Base URL for WebUI (default: http://localhost:5223)
         """
         self.webui_url = webui_url or settings.sdxl_webui_url
         self.api_url = f"{self.webui_url.rstrip('/')}/sdapi/v1/txt2img"

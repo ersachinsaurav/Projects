@@ -216,7 +216,8 @@ Users notice their work getting done."""
 
 def _get_hashtags_rules() -> str:
     """Hashtag rules."""
-    return """=== HASHTAGS RULES (CRITICAL) ===
+    branding_hashtag = get_branding_hashtag()
+    return f"""=== HASHTAGS RULES (CRITICAL) ===
 - Generate 3-4 content hashtags + 1 branding hashtag (4-5 total)
 - Add {branding_hashtag} at the END of the array (this is the ONLY personal branding tag allowed)
 - DO NOT invent or add any other personal branding hashtags.
@@ -612,7 +613,7 @@ When your code becomes invisible.
 Users notice their work getting done."""
 
     # Qwen-specific hashtag rules
-    hashtags = """========================
+    hashtags = f"""========================
 HASHTAG RULES (CRITICAL)
 ========================
 - Generate 3-4 content hashtags + 1 branding hashtag (4-5 total)

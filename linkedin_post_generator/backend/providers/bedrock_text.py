@@ -536,7 +536,7 @@ class BedrockTextProvider(TextModelProvider):
 
         return TextGenerationResponse(
             post_text=post_text,
-            short_post=short_post or "Check out this insight! 🚀",  # Ultimate fallback
+            short_post=short_post or "Check out this insight!",  # Ultimate fallback
             hashtags=hashtags,
             image_recommendation=image_recommendation,  # ALWAYS present
             image_strategy=image_strategy,  # Can be None if generate_images=False

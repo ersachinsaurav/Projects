@@ -13,7 +13,7 @@ Supported Models:
 - mistral:7b (professional content)
 - llama3:8b (creative content)
 
-Uses Ollama's direct HTTP API at http://localhost:11434
+Uses Ollama's direct HTTP API at http://localhost:5222
 """
 
 import json
@@ -76,7 +76,7 @@ class OllamaTextProvider(TextModelProvider):
 
     def __init__(self, base_url: Optional[str] = None):
         """Initialize Ollama client with pipeline configuration."""
-        self.base_url = base_url or getattr(settings, 'ollama_base_url', 'http://localhost:11434')
+        self.base_url = base_url or getattr(settings, 'ollama_base_url', 'http://localhost:5222')
         self.client = httpx.AsyncClient(
             base_url=self.base_url,
             timeout=180.0,  # Pipeline takes longer (3 steps)
@@ -843,7 +843,7 @@ class OllamaTextProvider(TextModelProvider):
 
         return TextGenerationResponse(
             post_text=post_text,
-            short_post=short_post or "Check out this insight! 🚀",
+            short_post=short_post or "Check out this insight!",
             hashtags=hashtags,
             image_recommendation=image_recommendation,
             image_strategy=image_strategy,
